@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ЛР5 Прототип закупок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=IBM+Plex+Sans:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --night:#142233; --night2:#0E1824; --steel:#4A6A88; --burgundy:#6B1E36; --burgundy-light:#8E2A47;
+  --amber:#B5832F; --brick:#B03A2E; --bottle:#2E6A50;
+  --overcast:#E8ECF0; --paper:#FBFCFD; --ink:#1B2633; --muted:#5E6B7A; --rule:#C9D1DA;
+  --pin:repeating-linear-gradient(90deg,rgba(255,255,255,.07) 0 1px,transparent 1px 14px);
+  --u:24px;
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif;
+  --bg:#E8ECF0;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#DDE3E9}}
+:root[data-theme="dark"]{--bg:#DDE3E9}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--sans);font-size:16px;line-height:24px;background:var(--bg);color:var(--ink);min-height:100vh}
+a{color:inherit}
+button{font:inherit}
+.ic{width:16px;height:16px;display:inline-block;vertical-align:-3px;flex:none}
+
+/* ---------- полоса тестирования ---------- */
+.testbar{position:sticky;top:0;z-index:60;background:var(--burgundy);color:#fff;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;padding:12px 16px;font-size:14px;line-height:24px}
+.testbar b{font-weight:600}
+.testbar .tb-task{flex:1;min-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;opacity:.95}
+.testbar .tb-time{font-variant-numeric:tabular-nums;opacity:.85}
+.testbar button{height:36px;padding:0 14px;border:0;border-radius:2px;cursor:pointer;font-size:13px;font-weight:600}
+.tb-show{background:rgba(255,255,255,.15);color:#fff}
+.tb-done{background:#fff;color:var(--burgundy)}
+.tb-skip{background:transparent;color:#F3D9E0;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4)}
+
+/* ---------- шапка и меню ---------- */
+.hdr{background-color:var(--night);background-image:var(--pin);color:#fff;box-shadow:inset 0 -3px 0 var(--burgundy)}
+.hdr-in{max-width:1200px;margin:0 auto;padding:var(--u) 16px;display:flex;align-items:center;gap:24px}
+.brand{display:flex;align-items:center;gap:16px;cursor:pointer;text-decoration:none;color:#fff;flex:none}
+.mark{width:48px;height:48px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);display:grid;place-items:center;font-family:var(--serif);font-weight:700;font-size:22px}
+.brand-name{font-family:var(--serif);font-weight:700;font-size:22px;line-height:24px}
+.brand-sub{font-size:12px;line-height:24px;color:#9FB0C2}
+.hsearch{flex:1;display:flex;height:48px;min-width:0;max-width:520px}
+.hsearch input{flex:1;min-width:0;height:48px;border:0;padding:0 16px;font:15px/24px var(--sans);color:var(--ink)}
+.hsearch button{border:0;background:var(--burgundy);color:#fff;padding:0 18px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:8px}
+.hsearch input:focus{outline:2px solid var(--burgundy-light);outline-offset:-2px}
+.uact{margin-left:auto;display:flex;align-items:center;gap:12px}
+.ibtn{position:relative;width:48px;height:48px;display:grid;place-items:center;color:#D9E1EA;box-shadow:inset 0 0 0 1px rgba(255,255,255,.25);background:none;border:0;cursor:pointer}
+.ibtn em{position:absolute;top:-6px;right:-6px;background:var(--burgundy-light);font:600 11px/16px var(--sans);font-style:normal;padding:0 5px;border-radius:8px;color:#fff}
+.uchip{display:flex;align-items:center;gap:12px;font-size:12px;line-height:24px;color:#C9D4E0}
+.uchip b{display:block;color:#fff;font-size:14px}
+.avatar{width:48px;height:48px;border-radius:50%;background:var(--burgundy-light);display:grid;place-items:center;color:#fff;font-weight:600;font-size:14px;flex:none}
+.logout{background:none;border:0;color:#C9D4E0;cursor:pointer;font-size:12px;text-decoration:underline}
+.nav{background:var(--paper);box-shadow:inset 0 -1px 0 var(--rule)}
+.nav ul{max-width:1200px;margin:0 auto;padding:0 16px;display:flex;list-style:none;overflow-x:auto;scrollbar-width:none}
+.nav a{display:flex;align-items:center;gap:6px;height:48px;padding:0 14px;text-decoration:none;font-size:15px;white-space:nowrap;cursor:pointer;color:var(--ink)}
+.nav a:hover{background:var(--overcast)}
+.nav a.cur{box-shadow:inset 0 -3px 0 var(--burgundy);font-weight:600;color:var(--night)}
+.nav a.off{color:#9AA5B1;cursor:not-allowed}
+.nav a.ro::after{content:"просмотр";font-size:10px;line-height:16px;color:var(--muted);background:var(--overcast);padding:0 4px;border-radius:2px}
+
+/* ---------- раскладка ---------- */
+.wrap{max-width:1200px;margin:0 auto;padding:var(--u) 16px 48px}
+.crumbs{font-size:13px;line-height:24px;color:var(--muted);margin-bottom:var(--u)}
+.crumbs a{cursor:pointer;text-decoration:underline}
+.grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--u);align-items:start}
+.c12{grid-column:span 12}.c8{grid-column:span 8}.c6{grid-column:span 6}.c4{grid-column:span 4}.c3{grid-column:span 3}
+.panel{background:var(--paper);box-shadow:inset 0 4px 0 var(--night);padding:var(--u)}
+.panel.accent{box-shadow:inset 0 4px 0 var(--burgundy)}
+.panel.steel{box-shadow:inset 0 4px 0 var(--steel)}
+.panel.amber{box-shadow:inset 0 4px 0 var(--amber)}
+.panel.green{box-shadow:inset 0 4px 0 var(--bottle)}
+h1.t{font-family:var(--serif);font-weight:700;font-size:36px;line-height:48px;color:var(--night)}
+h2.t{font-family:var(--serif);font-weight:700;font-size:28px;line-height:48px;color:var(--night)}
+h3.t{font-family:var(--serif);font-weight:700;font-size:22px;line-height:24px;color:var(--night);margin-bottom:var(--u)}
+.kicker{font-size:12px;line-height:24px;color:var(--muted);letter-spacing:.02em}
+p.s{font-size:14px;line-height:24px;color:var(--muted)}
+.mt{margin-top:var(--u)}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+.spread{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-end;gap:12px}
+
+.btn{display:inline-flex;align-items:center;gap:8px;height:48px;background:var(--night);color:#fff;border:0;box-shadow:inset 0 0 0 1px var(--night);border-radius:2px;font:600 15px/24px var(--sans);padding:0 22px;cursor:pointer;white-space:nowrap;text-decoration:none}
+.btn:hover{background:var(--burgundy);box-shadow:none}
+.btn.ghost{background:transparent;color:var(--night)}
+.btn.ghost:hover{background:var(--burgundy);color:#fff}
+.btn.light{background:#fff;color:var(--night);box-shadow:none}
+.btn.light:hover{background:var(--burgundy);color:#fff}
+.btn.inv{background:transparent;color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.45)}
+.btn.danger{background:var(--brick);box-shadow:none}
+.btn.sm{height:36px;padding:0 14px;font-size:13px}
+.btn[disabled]{opacity:.45;cursor:not-allowed;background:#8A96A3;box-shadow:none;color:#fff}
+.link{color:var(--burgundy);font-weight:600;cursor:pointer;text-decoration:none;background:none;border:0;font-size:14px}
+.link:hover{text-decoration:underline}
+
+/* формы */
+.form{display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--u)}
+.fld{display:flex;flex-direction:column}
+.fld label{font-size:13px;line-height:24px;font-weight:600;color:var(--night)}
+.fld label i{font-style:normal;color:var(--brick)}
+.fld input,.fld select,.fld textarea,.inp{height:48px;border:0;box-shadow:inset 0 0 0 1px var(--rule);background:#fff;padding:0 14px;font:15px/24px var(--sans);color:var(--ink);border-radius:0;width:100%}
+.fld textarea{height:96px;padding:12px 14px;resize:vertical}
+.fld input:focus,.fld select:focus,.fld textarea:focus,.inp:focus{outline:2px solid var(--burgundy);outline-offset:-2px}
+.fld .hint{font-size:12px;line-height:24px;color:var(--muted)}
+.fld.err input,.fld.err select{box-shadow:inset 0 0 0 2px var(--brick)}
+.fld .emsg{font-size:12px;line-height:24px;color:var(--brick);font-weight:600}
+.files{list-style:none}
+.files li{display:flex;justify-content:space-between;align-items:center;height:48px;box-shadow:inset 0 -1px 0 var(--rule);font-size:14px}
+.files li .ic{margin-right:8px;color:var(--steel)}
+.alertbox{padding:12px 16px 12px 20px;background:#F8E9E7;box-shadow:inset 4px 0 0 var(--brick);font-size:14px;line-height:24px;margin-bottom:var(--u)}
+.okbox{padding:12px 16px 12px 20px;background:#E6F0EA;box-shadow:inset 4px 0 0 var(--bottle);font-size:14px;line-height:24px;margin-bottom:var(--u)}
+.infobox{padding:12px 16px 12px 20px;background:#EEF2F6;box-shadow:inset 4px 0 0 var(--steel);font-size:14px;line-height:24px;margin-bottom:var(--u)}
+
+/* таблицы */
+table.list{width:100%;border-collapse:collapse;font-size:14px;line-height:24px}
+table.list th{text-align:left;font-weight:600;color:var(--muted);font-size:12px;padding:12px 8px;box-shadow:inset 0 -1px 0 var(--rule);white-space:nowrap}
+table.list td{padding:12px 8px;box-shadow:inset 0 -1px 0 var(--rule);vertical-align:top}
+table.list td small{display:block;color:var(--muted);font-size:12px}
+table.list tr.click{cursor:pointer}
+table.list tr.click:hover td{background:#F1F4F7}
+table.list tr.hl td{background:#FBF3E6}
+.num{font-variant-numeric:tabular-nums lining-nums;white-space:nowrap}
+.st{display:inline-block;height:24px;font-size:11px;line-height:24px;font-weight:600;padding:0 8px;border-radius:2px;color:#fff;white-space:nowrap}
+.st.apply{background:var(--steel)}.st.auction{background:var(--burgundy)}.st.review{background:var(--amber)}.st.results{background:#6B5B95}.st.done{background:var(--bottle)}.st.draft{background:#8A96A3}
+.st.sent{background:var(--steel)}.st.adm{background:var(--bottle)}.st.rej{background:var(--brick)}.st.win{background:var(--bottle)}.st.wd{background:#8A96A3}
+.tabs{display:flex;box-shadow:inset 0 -1px 0 var(--rule);margin-bottom:var(--u);overflow-x:auto}
+.tabs a{display:flex;align-items:center;gap:6px;height:48px;padding:0 16px;font-size:14px;cursor:pointer;color:var(--muted);text-decoration:none;white-space:nowrap}
+.tabs a.cur{box-shadow:inset 0 -3px 0 var(--burgundy);color:var(--night);font-weight:600}
+.kv{display:grid;grid-template-columns:220px 1fr;font-size:14px;line-height:24px}
+.kv div{padding:12px 0;box-shadow:inset 0 -1px 0 var(--rule)}
+.kv div:nth-child(odd){color:var(--muted)}
+ul.feed{list-style:none}
+ul.feed li{padding:12px 0;box-shadow:inset 0 -1px 0 var(--rule);font-size:14px;line-height:24px}
+ul.feed li small{display:block;color:var(--muted);font-size:12px}
+ul.links{list-style:none}
+ul.links li{display:flex;justify-content:space-between;align-items:center;gap:12px;height:48px;box-shadow:inset 0 -1px 0 var(--rule);font-size:14px}
+ul.links li:last-child{box-shadow:none}
+ul.links a{cursor:pointer;text-decoration:none}
+ul.links a:hover{color:var(--burgundy);text-decoration:underline}
+ul.links kbd{font:600 11px var(--sans);color:var(--muted)}
+
+/* главная */
+.hero{background-color:var(--night);background-image:var(--pin);color:#fff;padding:48px;box-shadow:inset 0 -3px 0 var(--burgundy)}
+.hero .kicker{color:#9FB0C2}
+.hero h1{font-family:var(--serif);font-weight:700;font-size:44px;line-height:48px;margin-bottom:var(--u)}
+.hero p{color:#C9D4E0;max-width:62ch}
+.card{background:#fff;box-shadow:inset 0 4px 0 var(--steel);padding:var(--u);display:flex;flex-direction:column;cursor:pointer}
+.card:hover{background:#F7F9FB}
+.card.b{box-shadow:inset 0 4px 0 var(--burgundy)}.card.a{box-shadow:inset 0 4px 0 var(--amber)}.card.g{box-shadow:inset 0 4px 0 var(--bottle)}
+.card .big{font-family:var(--serif);font-weight:700;font-size:44px;line-height:48px;color:var(--night)}
+.card .more{margin-top:auto;padding-top:var(--u);color:var(--burgundy);font-weight:600;font-size:14px}
+
+/* аукцион */
+.auc{background-color:var(--night);background-image:var(--pin);color:#fff;padding:var(--u) 48px 48px}
+.auc .kicker{color:#9FB0C2}
+.auc .big{font-family:var(--serif);font-weight:700;font-size:52px;line-height:72px;font-variant-numeric:tabular-nums}
+.auc .stats{display:flex;flex-wrap:wrap;gap:24px 48px;margin-top:var(--u)}
+.auc .stats b{display:block;font-size:20px;line-height:24px}
+.auc .stats span{font-size:12px;color:#9FB0C2}
+
+/* модальное окно, уведомления */
+.modal-bg{position:fixed;inset:0;background:rgba(14,24,36,.55);display:flex;align-items:flex-start;justify-content:center;padding:72px 16px 16px;z-index:100;overflow:auto}
+.modal{background:var(--paper);width:100%;max-width:560px;box-shadow:inset 0 4px 0 var(--burgundy),0 20px 60px rgba(0,0,0,.3);padding:var(--u)}
+.modal.wide{max-width:860px}
+.modal h3{font-family:var(--serif);font-weight:700;font-size:26px;line-height:48px;color:var(--night)}
+.modal .mbody{font-size:15px;line-height:24px;margin:12px 0 var(--u)}
+.modal .mbody p+p{margin-top:12px}
+.modal .row{justify-content:flex-end}
+.toast{position:fixed;right:16px;bottom:16px;z-index:120;background:var(--night);color:#fff;padding:12px 20px;font-size:14px;line-height:24px;box-shadow:inset 4px 0 0 var(--bottle),0 8px 24px rgba(0,0,0,.25);max-width:420px}
+.toast.bad{box-shadow:inset 4px 0 0 var(--brick),0 8px 24px rgba(0,0,0,.25)}
+.picker li{cursor:pointer}
+.picker li:hover{background:#F1F4F7}
+.doc{background:#fff;box-shadow:inset 0 0 0 1px var(--rule);padding:24px 32px;font-family:Georgia,serif;font-size:14px;line-height:24px;max-height:360px;overflow:auto}
+
+/* стартовый экран и журнал */
+.start-hero{background-color:var(--night);background-image:var(--pin);color:#fff;padding:48px}
+.start-hero h1{font-family:var(--serif);font-size:44px;line-height:48px;margin:0 0 var(--u)}
+.start-hero p{color:#C9D4E0;max-width:70ch}
+.logtbl{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;line-height:20px;width:100%;border-collapse:collapse}
+.logtbl td,.logtbl th{padding:4px 6px;box-shadow:inset 0 -1px 0 var(--rule);text-align:left;vertical-align:top;white-space:nowrap}
+.logtbl td.w{white-space:normal;word-break:break-all;max-width:360px}
+.logwrap{max-height:480px;overflow:auto;background:#fff;box-shadow:inset 0 0 0 1px var(--rule)}
+.out-f{color:var(--brick);font-weight:600}
+.fab{position:fixed;left:16px;bottom:16px;z-index:70;height:36px;padding:0 14px;border:0;border-radius:2px;background:var(--night);color:#fff;font:600 12px var(--sans);cursor:pointer;opacity:.85}
+.fab:hover{opacity:1}
+.foot{max-width:1200px;margin:0 auto;padding:0 16px 24px;font-size:12px;color:var(--muted)}
+
+@media (max-width:900px){
+  .c8,.c6,.c4,.c3{grid-column:span 12}
+  .hsearch{display:none}
+  .uchip .who{display:none}
+  .hero,.start-hero{padding:24px}
+  .hero h1,.start-hero h1{font-size:32px}
+  .kv{grid-template-columns:1fr}
+  .kv div:nth-child(odd){padding-bottom:0;box-shadow:none}
+  .auc{padding:24px}
+  table.list .hm{display:none}
+}
+</style>
+</head>
+<body>
+<div id="testbar"></div>
+<div id="app"></div>
+<div id="modal"></div>
+<div id="toast"></div>
+
+<script>
+(function(){
+"use strict";
+/* =====================================================================
+   ИКОНКИ
+   ===================================================================== */
+function I(n){var P={
+ search:'<circle cx="7" cy="7" r="4.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M10.5 10.5 14 14" stroke="currentColor" stroke-width="1.6"/>',
+ bell:'<path d="M8 2a4 4 0 0 0-4 4v3l-1.5 2h11L12 9V6a4 4 0 0 0-4-4zM6.5 12.5a1.5 1.5 0 0 0 3 0"/>',
+ lock:'<rect x="3" y="7" width="10" height="7" rx="1"/><path d="M5 7V5a3 3 0 0 1 6 0v2" fill="none" stroke="currentColor" stroke-width="1.5"/>',
+ doc:'<path d="M3 1h7l3 3v11H3z" fill="none" stroke="currentColor" stroke-width="1.3"/><path d="M5.5 8h5M5.5 10.5h5M5.5 5.5h2.5" stroke="currentColor" stroke-width="1.2"/>',
+ clip:'<path d="M10.5 4.5L5 10a1.8 1.8 0 0 0 2.5 2.5L13 7a3.2 3.2 0 0 0-4.5-4.5L3 8" fill="none" stroke="currentColor" stroke-width="1.4"/>',
+ x:'<path d="M4 4l8 8M12 4l-8 8" stroke="currentColor" stroke-width="1.6"/>'
+};return '<svg class="ic" viewBox="0 0 16 16" fill="currentColor" aria-hidden="true">'+P[n]+'</svg>'}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+function money(n){return n==null||n===''?'—':String(Math.round(n)).replace(/\B(?=(\d{3})+(?!\d))/g,' ')}
+function parseMoney(s){var d=String(s||'').replace(/[^\d]/g,'');return d?parseInt(d,10):NaN}
+var TODAY='16.11.2026';
+function parseDate(s){var m=/^(\d{2})\.(\d{2})\.(\d{4})$/.exec(String(s||'').trim());if(!m)return null;var d=new Date(+m[3],+m[2]-1,+m[1]);return d.getDate()==+m[1]&&d.getMonth()==+m[2]-1?d:null}
+function store(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function load(k){try{return localStorage.getItem(k)}catch(e){return null}}
+
+/* =====================================================================
+   МОДУЛЬ ФИКСАЦИИ СОБЫТИЙ (логгер)
+   Формат записи соответствует методическим указаниям:
+   timestamp, actor_id, actor_role, action, object_type, object_id,
+   outcome, changes, context. Выгрузка: CSV, JSONL, PLAIN TEXT.
+   ===================================================================== */
+var LOG=(function(){
+  var KEY='lr5_eventlog_v1';
+  var all=[];
+  try{all=JSON.parse(load(KEY)||'[]')}catch(e){all=[]}
+  var ua=(function(){var u=navigator.userAgent,m=/(Edg|OPR|YaBrowser|Chrome|Firefox|Safari)\/(\d+)/.exec(u);return m?(m[1]+'/'+m[2]):'browser'})();
+  var ctx={session_id:null,actor_id:'anon',actor_role:'guest',task_id:null,screen:null};
+  var dbq=[];
+  function persist(){store(KEY,JSON.stringify(all.slice(-20000)))}
+  function rec(action,object_type,object_id,outcome,changes,extra){
+    var e={
+      timestamp:new Date().toISOString(),
+      actor_id:ctx.actor_id, actor_role:ctx.actor_role,
+      action:action, object_type:object_type||'ui', object_id:object_id==null?'':String(object_id),
+      outcome:outcome||'success',
+      changes:changes||null,
+      context:Object.assign({session_id:ctx.session_id,correlation_id:ctx.session_id,task_id:ctx.task_id,screen:ctx.screen,user_agent:ua,seq:all.length+1},extra||{})
+    };
+    all.push(e);persist();
+    if(window.__onLog)window.__onLog(e);
+    return e;
+  }
+  function csvCell(v){if(v==null)return '';var s=typeof v==='string'?v:JSON.stringify(v);return /[",\n]/.test(s)?'"'+s.replace(/"/g,'""')+'"':s}
+  function toCSV(list){
+    var h='timestamp,actor_id,actor_role,action,object_type,object_id,outcome,changes,context';
+    return [h].concat(list.map(function(e){return [e.timestamp,e.actor_id,e.actor_role,e.action,e.object_type,e.object_id,e.outcome,e.changes?JSON.stringify(e.changes):'',JSON.stringify(e.context)].map(csvCell).join(',')})).join('\n')+'\n';
+  }
+  function toJSONL(list){
+    return list.map(function(e){var o={timestamp:e.timestamp,actor:{id:e.actor_id,role:e.actor_role},action:e.action,object:{type:e.object_type,id:e.object_id},outcome:e.outcome};if(e.changes)o.changes=e.changes;o.context=e.context;return JSON.stringify(o)}).join('\n')+'\n';
+  }
+  function toTXT(list){
+    return list.map(function(e){
+      var c=e.context||{},s=e.timestamp+'  actor='+e.actor_id+'  role='+e.actor_role+'  action='+e.action+'  object='+e.object_type+':'+(e.object_id||'-')+'  outcome='+e.outcome+'  task='+(c.task_id||'-')+'  screen='+(c.screen||'-')+'  ua="'+c.user_agent+'"  corr='+(c.correlation_id||'-');
+      if(e.changes)Object.keys(e.changes).forEach(function(k){var v=e.changes[k];s+='  change.'+k+'="'+(v&&typeof v==='object'&&'old' in v?String(v.old)+'->'+String(v.new):String(v).replace(/"/g,'\''))+'"'});
+      ['error','detail','value'].forEach(function(k){if(c[k]!=null)s+='  '+k+'='+JSON.stringify(c[k])});
+      return s;
+    }).join('\n')+'\n';
+  }
+  return {
+    ctx:ctx, rec:rec, all:function(){return all},
+    session:function(sid){return all.filter(function(e){return e.context&&e.context.session_id===sid})},
+    clear:function(){all=[];persist()},
+    replaceAll:function(list){all=list;persist()},
+    toCSV:toCSV,toJSONL:toJSONL,toTXT:toTXT
+  };
+})();
+
+/* ---- база страницы (если доступна): логи каждого задания пишутся документом ---- */
+var DB=null;
+(function(){
+  if(window.claude&&typeof window.claude.use==='function'){
+    window.claude.use('db').then(function(db){DB=db;if(window.__dbReady)window.__dbReady()}).catch(function(){DB=null});
+  }
+})();
+function dbWrite(path,data){
+  if(!DB)return Promise.resolve(false);
+  return DB.doc(path).set(data).then(function(){return true}).catch(function(e){console.warn('db',e);return false});
+}
+
+/* =====================================================================
+   ДАННЫЕ (учебные). Сбрасываются при старте каждого сеанса.
+   ===================================================================== */
+var ORG='ФГБОУ ВО «Технический университет»';
+var USERS={
+  customer:{id:'u_cust',name:'Иванова А. С.',post:'Сотрудник заказчика',ini:'ИА',org:ORG,roleName:'Сотрудник заказчика'},
+  supplier:{id:'u_supp',name:'ООО «ТехСнаб»',post:'Представитель поставщика · Сидоров И. П.',ini:'ТС',org:'ООО «ТехСнаб»',roleName:'Представитель поставщика'},
+  commission:{id:'u_comm',name:'Петров В. Н.',post:'Член комиссии',ini:'ПВ',org:ORG,roleName:'Член комиссии'}
+};
+var STAGES={draft:'Черновик',apply:'Подача заявок',auction:'Аукцион',review:'Рассмотрение',results:'Итоги подведены',done:'Завершена'};
+var APPST={draft:'Черновик',sent:'Подана',adm:'Допущена',rej:'Отклонена',win:'Победитель',wd:'Отозвана'};
+var OKPD={'17.23':'17.23 Канцелярские товары','26.20':'26.20 Компьютеры и периферия','31.01':'31.01 Мебель','43.91':'43.91 Кровельные работы','58.29':'58.29 Программное обеспечение','81.21':'81.21 Уборка помещений','10.89':'10.89 Продукты питания','42.11':'42.11 Ремонт дорог','22.19':'22.19 Медицинские изделия из резины'};
+var METHODS=['Электронный аукцион','Электронный конкурс','Запрос котировок'];
+var FILES_PURCH=['Техническое задание.pdf','Проект контракта.docx','Обоснование НМЦК.xlsx'];
+var FILES_APP=['Выписка из ЕГРЮЛ.pdf','Декларация соответствия.pdf','Устав организации.pdf'];
+
+function seed(){
+  var P=[
+   {id:'0301-2026-114',name:'Поставка офисной техники',org:ORG,method:METHODS[0],nmck:2480000,okpd:'26.20',stage:'auction',deadline:'05.11.2026',docs:['Техническое задание.pdf','Проект контракта.docx']},
+   {id:'0301-2026-109',name:'Ремонт кровли учебного корпуса',org:ORG,method:METHODS[0],nmck:7150000,okpd:'43.91',stage:'review',deadline:'30.10.2026',docs:['Техническое задание.pdf','Смета.xlsx']},
+   {id:'0301-2026-117',name:'Услуги по уборке помещений',org:ORG,method:METHODS[0],nmck:1320000,okpd:'81.21',stage:'apply',deadline:'24.11.2026',docs:['Техническое задание.pdf']},
+   {id:'0301-2026-121',name:'Поставка лабораторной мебели',org:ORG,method:METHODS[1],nmck:3940000,okpd:'31.01',stage:'draft',deadline:'',docs:[]},
+   {id:'0301-2026-098',name:'Программное обеспечение САПР',org:ORG,method:METHODS[2],nmck:980000,okpd:'58.29',stage:'results',deadline:'20.10.2026',docs:['Техническое задание.pdf','Протокол подведения итогов.pdf'],winner:'ООО «ТехСнаб»',winPrice:955000},
+   {id:'0405-2026-125',name:'Поставка ноутбуков для учебных классов',org:'МБОУ «Лицей № 5»',method:METHODS[0],nmck:1240000,okpd:'26.20',stage:'apply',deadline:'27.11.2026',docs:['Техническое задание.pdf','Проект контракта.docx']},
+   {id:'0405-2026-127',name:'Поставка мониторов',org:'МБОУ «Лицей № 5»',method:METHODS[0],nmck:610000,okpd:'26.20',stage:'apply',deadline:'21.11.2026',docs:['Техническое задание.pdf']},
+   {id:'0118-2026-402',name:'Поставка медицинских перчаток',org:'ГБУЗ «Городская больница № 3»',method:METHODS[2],nmck:860000,okpd:'22.19',stage:'apply',deadline:'20.11.2026',docs:['Техническое задание.pdf']},
+   {id:'0201-2026-077',name:'Ремонт дороги по ул. Ленина',org:'Администрация городского округа',method:METHODS[0],nmck:18400000,okpd:'42.11',stage:'apply',deadline:'30.11.2026',docs:['Техническое задание.pdf','Смета.xlsx']},
+   {id:'0405-2026-015',name:'Продукты питания для школьных столовых',org:'МКУ «Управление образования»',method:METHODS[1],nmck:5760000,okpd:'10.89',stage:'apply',deadline:'26.11.2026',docs:['Техническое задание.pdf']},
+   {id:'0302-2026-044',name:'Поставка принтеров и МФУ',org:'ГБПОУ «Колледж связи»',method:METHODS[2],nmck:420000,okpd:'26.20',stage:'review',deadline:'10.11.2026',docs:['Техническое задание.pdf']}
+  ];
+  P.forEach(function(p){p.history=[{t:'—',who:'Система',what:'Закупка зарегистрирована'}];if(p.stage!=='draft')p.history.push({t:'—',who:p.org,what:'Закупка опубликована'})});
+  var A=[
+   // 117 — уборка (заказчик просматривает)
+   {id:'З-117-01',pid:'0301-2026-117',sup:'ООО «ЧистоДом»',inn:'0274123456',price:1250000,term:365,date:'12.11.2026',st:'sent',docs:['Выписка из ЕГРЮЛ.pdf','Лицензия.pdf','Опыт оказания услуг.pdf'],addr:'г. Уфа, ул. Мира, 14',contact:'Галиев Р. Ф.'},
+   {id:'З-117-02',pid:'0301-2026-117',sup:'ООО «Клининг-Сервис»',inn:'0278987654',price:1290000,term:365,date:'13.11.2026',st:'sent',docs:['Выписка из ЕГРЮЛ.pdf','Декларация соответствия.pdf'],addr:'г. Уфа, пр. Октября, 101',contact:'Ахметова Л. Р.'},
+   {id:'З-117-03',pid:'0301-2026-117',sup:'ООО «БлескПро»',inn:'0273555111',price:1180000,term:365,date:'10.11.2026',st:'wd',docs:['Выписка из ЕГРЮЛ.pdf'],addr:'г. Стерлитамак, ул. Ленина, 2',contact:'Орлов Д. А.'},
+   {id:'З-117-04',pid:'0301-2026-117',sup:'ИП Сафин Т. М.',inn:'027412398765',price:1210000,term:365,date:'14.11.2026',st:'sent',docs:['Выписка из ЕГРИП.pdf'],addr:'г. Уфа, ул. Гафури, 9',contact:'Сафин Т. М.'},
+   // 109 — кровля (комиссия)
+   {id:'З-109-01',pid:'0301-2026-109',sup:'ООО «КровСтрой»',inn:'0276001122',price:6980000,term:60,date:'28.10.2026',st:'sent',decision:'ok',docs:['Выписка из ЕГРЮЛ.pdf','Выписка СРО.pdf','Опыт работ.pdf'],addr:'г. Уфа, ул. Заводская, 5',contact:'Кузнецов А. В.'},
+   {id:'З-109-02',pid:'0301-2026-109',sup:'ООО «СтройМонтаж»',inn:'0277334455',price:7020000,term:55,date:'29.10.2026',st:'sent',decision:'ok',docs:['Выписка из ЕГРЮЛ.pdf','Выписка СРО.pdf'],addr:'г. Уфа, ул. Свободы, 40',contact:'Иргалин Б. С.'},
+   {id:'З-109-03',pid:'0301-2026-109',sup:'ИП Гарипов Р. Р.',inn:'027700991122',price:6750000,term:70,date:'29.10.2026',st:'sent',decision:'',docs:['Выписка из ЕГРИП.pdf','Смета.xlsx'],addr:'г. Нефтекамск, ул. Мира, 3',contact:'Гарипов Р. Р.',note:'В составе документов отсутствует выписка из реестра СРО'},
+   {id:'З-109-04',pid:'0301-2026-109',sup:'ООО «Уфа-Ремонт»',inn:'0278665544',price:7100000,term:50,date:'30.10.2026',st:'sent',decision:'',docs:['Выписка из ЕГРЮЛ.pdf','Выписка СРО.pdf','Опыт работ.pdf'],addr:'г. Уфа, ул. Менделеева, 21',contact:'Ситдиков Р. И.'},
+   {id:'З-109-05',pid:'0301-2026-109',sup:'АО «БашСтрой»',inn:'0274778899',price:7090000,term:45,date:'30.10.2026',st:'sent',decision:'no',reason:'Отсутствует лицензия',docs:['Выписка из ЕГРЮЛ.pdf'],addr:'г. Уфа, ул. Ленина, 70',contact:'Хасанов И. Р.'},
+   // заявки поставщика ООО «ТехСнаб»
+   {id:'З-114-03',pid:'0301-2026-114',sup:'ООО «ТехСнаб»',inn:'0278112233',price:2450000,term:20,date:'03.11.2026',st:'adm',docs:['Выписка из ЕГРЮЛ.pdf','Декларация соответствия.pdf'],addr:'г. Уфа, ул. Кирова, 52',contact:'Сидоров И. П.',mine:true},
+   {id:'З-098-01',pid:'0301-2026-098',sup:'ООО «ТехСнаб»',inn:'0278112233',price:955000,term:10,date:'18.10.2026',st:'win',docs:['Выписка из ЕГРЮЛ.pdf'],addr:'г. Уфа, ул. Кирова, 52',contact:'Сидоров И. П.',mine:true},
+   {id:'З-402-07',pid:'0118-2026-402',sup:'ООО «ТехСнаб»',inn:'0278112233',price:845000,term:15,date:'11.11.2026',st:'sent',docs:['Выписка из ЕГРЮЛ.pdf'],addr:'г. Уфа, ул. Кирова, 52',contact:'Сидоров И. П.',mine:true},
+   {id:'З-114-01',pid:'0301-2026-114',sup:'ООО «ОфисПлюс»',inn:'0274000111',price:2470000,term:25,date:'02.11.2026',st:'adm',docs:['Выписка из ЕГРЮЛ.pdf'],addr:'г. Уфа',contact:'—'},
+   {id:'З-098-02',pid:'0301-2026-098',sup:'ООО «СофтЛайн-Уфа»',inn:'0274000222',price:968000,term:10,date:'18.10.2026',st:'adm',docs:['Выписка из ЕГРЮЛ.pdf'],addr:'г. Уфа',contact:'—'}
+  ];
+  var ARCH=[
+   {id:'0301-2025-311',name:'Поставка учебной мебели',org:ORG,method:METHODS[0],nmck:2150000,okpd:'31.01',stage:'done',closed:'14.03.2026',winner:'ООО «МебельГрад»',winPrice:1980000,docs:['Протокол подведения итогов.pdf','Контракт.pdf']},
+   {id:'0301-2026-012',name:'Обслуживание лифтового оборудования',org:ORG,method:METHODS[1],nmck:860000,okpd:'43.91',stage:'done',closed:'02.06.2026',winner:'ООО «ЛифтСервис»',winPrice:812000,docs:['Протокол подведения итогов.pdf','Контракт.pdf']},
+   {id:'0301-2026-047',name:'Лицензии офисного ПО',org:ORG,method:METHODS[2],nmck:540000,okpd:'58.29',stage:'done',closed:'21.08.2026',winner:'ООО «СофтЛайн-Уфа»',winPrice:519000,docs:['Протокол подведения итогов.pdf','Контракт.pdf']}
+  ];
+  ARCH.forEach(function(a){a.archived=true;a.history=[{t:'—',who:'Система',what:'Закупка зарегистрирована'},{t:'—',who:ORG,what:'Закупка опубликована'},{t:'—',who:'Комиссия',what:'Победитель зафиксирован'},{t:a.closed,who:ORG,what:'Закупка завершена и переведена в архив'}]});
+  return {P:P.concat(ARCH),A:A,
+    auction:{pid:'0301-2026-114',step:12400,best:2430000,bestBy:'Участник 2',myBest:null,
+      bids:[{t:'10:00:12',who:'Участник 1',price:2467600},{t:'10:01:40',who:'Участник 3 (вы)',price:2455200},{t:'10:03:05',who:'Участник 2',price:2442800},{t:'10:04:31',who:'Участник 4',price:2430000}],
+      endsAt:Date.now()+18*60*1000+42*1000},
+    seq:126, reports:[]};
+}
+
+/* =====================================================================
+   СОСТОЯНИЕ И НАВИГАЦИЯ
+   ===================================================================== */
+var S={role:null,screen:'start',params:{},D:seed(),test:null,f2:{q:'',stage:'',okpd:'',mine:true},f4:{},f9:{q:'',period:''},draft:null,settings:{quick:['create','apps','report','search']}};
+function U(){return USERS[S.role]}
+function P(id){return S.D.P.filter(function(p){return p.id===id})[0]}
+function A(id){return S.D.A.filter(function(a){return a.id===id})[0]}
+function hist(p,what){var d=new Date();p.history.push({t:TODAY+' '+String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0'),who:U()?U().name:'—',what:what})}
+
+/* права доступа к разделам (ЛР3, состояние меню M1): Д — доступно, П — просмотр, '-' — недоступно */
+var MENU=[
+ {k:'home',label:'Главная',sc:'F1',acc:{customer:'Д',supplier:'Д',commission:'Д'}},
+ {k:'purch',label:'Закупки',sc:'F2',acc:{customer:'Д',supplier:'Д',commission:'Д'}},
+ {k:'apps',label:'Заявки',sc:'F4',acc:{customer:'Д',supplier:'Д',commission:'Д'},lbl:{supplier:'Мои заявки'}},
+ {k:'auc',label:'Аукцион',sc:'F6',acc:{customer:'П',supplier:'Д',commission:'П'}},
+ {k:'rev',label:'Рассмотрение',sc:'F7',acc:{customer:'-',supplier:'-',commission:'Д'}},
+ {k:'arch',label:'Архив',sc:'F9',acc:{customer:'Д',supplier:'Д',commission:'Д'}},
+ {k:'rep',label:'Отчёты',sc:'F11',acc:{customer:'Д',supplier:'-',commission:'Д'}},
+ {k:'set',label:'Настройки',sc:'F12',acc:{customer:'Д',supplier:'Д',commission:'Д'}},
+ {k:'help',label:'Справка',sc:'HELP',acc:{customer:'Д',supplier:'Д',commission:'Д'}}
+];
+var SC_MENU={F1:'home',F2:'purch',F2N:'purch',F3:'purch',F4:'apps',F5:'apps',F5N:'apps',F6:'auc',F7:'rev',F7D:'rev',F8:'rev',F9:'arch',F10:'arch',F11:'rep',F12:'set',HELP:'help'};
+var SC_NAME={start:'Стартовый экран',reg:'Регистрация испытуемого',login:'Вход',F1:'Главная',F2:'Список закупок',F2N:'Форма закупки',F3:'Карточка закупки',F4:'Список заявок',F5:'Карточка заявки',F5N:'Форма заявки',F6:'Аукцион',F7:'Очередь рассмотрения',F7D:'Рассмотрение заявок',F8:'Итоги',F9:'Архив закупок',F10:'Архивная карточка',F11:'Отчёты',F12:'Настройки',HELP:'Справка',LOG:'Журнал событий',END:'Завершение тестирования'};
+
+function go(sc,params,via){
+  S.screen=sc;S.params=params||{};
+  LOG.ctx.screen=sc;
+  var objId=S.params.id||S.params.pid||'';
+  LOG.rec('screen_open','screen',sc,'success',null,{detail:SC_NAME[sc]+(objId?' · '+objId:''),value:via||null});
+  render();
+  window.scrollTo(0,0);
+  checkGoal();
+}
+
+/* =====================================================================
+   ОТРИСОВКА: шапка, меню, экран
+   ===================================================================== */
+function header(){
+  if(!S.role)return '';
+  var u=U();
+  var nav=MENU.map(function(m){
+    var a=m.acc[S.role],lab=(m.lbl&&m.lbl[S.role])||m.label,cur=SC_MENU[S.screen]===m.k;
+    if(a==='-')return '<li><a class="off" data-menu="'+m.k+'" title="Недоступно для вашей роли">'+I('lock')+esc(lab)+'</a></li>';
+    return '<li><a class="'+(cur?'cur ':'')+(a==='П'?'ro':'')+'" data-menu="'+m.k+'">'+esc(lab)+'</a></li>';
+  }).join('');
+  return '<header class="hdr"><div class="hdr-in">'+
+   '<a class="brand" data-menu="home"><div class="mark">СЗ</div><div><div class="brand-name">Сопровождение закупок</div><div class="brand-sub">'+esc(u.roleName)+'</div></div></a>'+
+   '<form class="hsearch" id="hsearch"><input id="hq" type="search" placeholder="Номер или наименование закупки" aria-label="Поиск закупки"><button type="submit">'+I('search')+'Найти</button></form>'+
+   '<div class="uact"><button class="ibtn" data-act="notif" title="Уведомления">'+I('bell')+'<em>3</em></button><div class="uchip"><span class="avatar">'+u.ini+'</span><span class="who"><b>'+esc(u.name)+'</b>'+esc(u.post)+'<br><button class="logout" data-act="logout">Выйти</button></span></div></div>'+
+   '</div></header><nav class="nav" aria-label="Главное меню"><ul>'+nav+'</ul></nav>';
+}
+function render(){
+  var fn=SCREENS[S.screen]||SCREENS.start;
+  document.getElementById('app').innerHTML=header()+'<main class="wrap" id="view">'+fn()+'</main><div class="foot">Учебный прототип · ЛР №5 ПЧМИ · данные условные · © 2026 СДР'+(S.test?'':' · <a id="fab" href="#" style="cursor:pointer">Журнал событий (для наблюдателя)</a>')+'</div>';
+  renderTestbar();
+  if(S.screen==='F6')startAuctionTimer();
+  if(S.screen==='LOG')renderLogTable();
+  var f=document.querySelector('[autofocus]');if(f)f.focus();
+}
+function crumbs(list){return '<div class="crumbs">'+list.map(function(c){return c[1]?'<a data-go="'+c[1]+'"'+(c[2]?' data-id="'+c[2]+'"':'')+'>'+esc(c[0])+'</a>':esc(c[0])}).join(' / ')+'</div>'}
+function st(stage){return '<span class="st '+stage+'">'+STAGES[stage]+'</span>'}
+function ast(s){return '<span class="st '+s+'">'+APPST[s]+'</span>'}
+
+/* =====================================================================
+   ЭКРАНЫ
+   ===================================================================== */
+var SCREENS={};
+
+/* ---- стартовый экран ---- */
+SCREENS.start=function(){
+  return '<section class="start-hero"><div class="kicker" style="color:#9FB0C2">Лабораторная работа №5 · Проектирование человеко-машинного интерфейса</div>'+
+   '<h1>Прототип информационной системы сопровождения государственных закупок</h1>'+
+   '<p>Прототип содержит экранные формы F1–F12 из лабораторной работы №3 и модуль фиксации событий: каждое действие пользователя записывается в журнал с отметкой времени. Журнал выгружается в форматах CSV, JSONL и PLAIN TEXT.</p></section>'+
+   '<div class="grid mt">'+
+   '<div class="panel accent c6"><h3 class="t">Тестирование</h3><p class="s">Для испытуемого. Шесть заданий по пользовательским сценариям, время выполнения фиксируется автоматически. Продолжительность — около 10 минут.</p><div class="row mt"><button class="btn" data-act="test_reg">Начать тестирование</button></div></div>'+
+   '<div class="panel steel c6"><h3 class="t">Свободный просмотр</h3><p class="s">Вход под одной из ролей без заданий. Действия тоже записываются в журнал.</p><div class="row mt"><button class="btn ghost" data-act="free" data-role="customer">Заказчик</button><button class="btn ghost" data-act="free" data-role="supplier">Поставщик</button><button class="btn ghost" data-act="free" data-role="commission">Комиссия</button></div></div>'+
+   '<div class="panel c12"><div class="spread"><div><h3 class="t" style="margin:0">Журнал событий</h3><p class="s">Для наблюдателя: сеансы испытуемых, просмотр событий, выгрузка лог-файлов.</p></div><button class="btn ghost" data-go="LOG">Открыть журнал</button></div></div></div>';
+};
+
+/* ---- регистрация испытуемого ---- */
+SCREENS.reg=function(){
+  var n=countSessions()+1, code='И-'+String(n).padStart(2,'0');
+  return crumbs([['Стартовый экран','start'],['Регистрация испытуемого']])+
+   '<div class="grid"><div class="panel accent c8"><h2 class="t">Регистрация испытуемого</h2>'+
+   '<p class="s">Данные нужны только для обработки результатов. Имя не записывается — используется код.</p>'+
+   '<div class="form mt">'+
+    '<div class="fld c6"><label>Код испытуемого</label><input id="r_code" value="'+code+'"></div>'+
+    '<div class="fld c6"><label>Уровень владения ПК</label><select id="r_pc"><option value="">— выберите —</option><option>базовый</option><option>средний</option><option>высокий</option></select></div>'+
+    '<div class="fld c12"><label>Опыт работы с порталами государственных закупок</label><select id="r_exp"><option value="">— выберите —</option><option>нет опыта</option><option>видел(а) такие порталы</option><option>работал(а) с ними</option></select></div>'+
+   '</div>'+
+   '<div class="infobox mt"><b>Как проходит тест.</b> Перед каждым заданием вы увидите его текст. Нажмите «Начать задание» и выполняйте его так, как сделали бы это в обычной работе. Когда закончите — нажмите «Готово» в бордовой полосе сверху. Если не получается — «Не могу выполнить». Текст задания можно снова открыть кнопкой «Задание».</div>'+
+   '<div class="row"><button class="btn" data-act="test_begin">Перейти к заданиям</button><button class="btn ghost" data-go="start">Отмена</button></div></div>'+
+   '<div class="panel c4"><h3 class="t">Задания</h3><ul class="feed">'+TASKS.map(function(t,i){return '<li><b>'+(i+1)+'. '+esc(t.title)+'</b><small>Роль: '+USERS[t.role].roleName+'</small></li>'}).join('')+'</ul></div></div>';
+};
+
+/* ---- F1 Главная ---- */
+SCREENS.F1=function(){
+  var u=U(),r=S.role,H,cards,quick;
+  var mine=S.D.P.filter(function(p){return p.org===ORG&&!p.archived});
+  if(r==='customer'){
+    var q=S.D.A.filter(function(a){return a.pid==='0301-2026-117'&&a.st==='sent'}).length;
+    H=['Добрый день, Анна Сергеевна · '+ORG,'Мои закупки','Активных закупок: '+mine.filter(function(p){return p.stage!=='draft'&&p.stage!=='done'}).length+'. Черновиков: '+mine.filter(function(p){return p.stage==='draft'}).length+'.',
+       '<button class="btn light" data-act="create">Создать закупку</button><button class="btn inv" data-go="F2">Мои закупки</button>'];
+    cards=[['a','Новые заявки',q,'по закупке № 0301-2026-117 «Услуги по уборке помещений»','F3','0301-2026-117','Открыть закупку →'],
+           ['b','Аукцион','06.11','Поставка офисной техники, № 0301-2026-114 — наблюдение','F6','','Наблюдать →'],
+           ['g','Итоги подведены','1','закупка № 0301-2026-098 ждёт завершения и передачи в архив','F3','0301-2026-098','Открыть →']];
+  }else if(r==='supplier'){
+    H=['ООО «ТехСнаб» · подписка: ОКПД2 26.20','Поиск закупок и участие','Новых закупок по подписке: 3. Заявок в работе: '+S.D.A.filter(function(a){return a.mine&&(a.st==='sent'||a.st==='adm')}).length+'.',
+       '<button class="btn light" data-go="F2">Найти закупку</button><button class="btn inv" data-menu="apps">Мои заявки</button>'];
+    cards=[['b','Аукцион','идёт','Вы допущены к аукциону № 0301-2026-114. Шаг 0,5 % НМЦК.','F6','','Войти в аукцион →'],
+           ['','По подписке','3','новые закупки по ОКПД2 26.20 «Компьютеры и периферия»','F2','','Смотреть →'],
+           ['g','Победа','1','Заявка по № 0301-2026-098 признана победителем','F5','З-098-01','Открыть →']];
+  }else{
+    H=['Петров В. Н. · член единой комиссии','Рассмотрение заявок','Закупок на рассмотрении: '+S.D.P.filter(function(p){return p.stage==='review'}).length+'. Срок по № 0301-2026-109 — 20.11.2026.',
+       '<button class="btn light" data-menu="rev">Открыть очередь</button><button class="btn inv" data-go="F2">Закупки</button>'];
+    cards=[['a','Рассмотрение № 109','5','заявок по закупке «Ремонт кровли учебного корпуса»','F7D','0301-2026-109','Рассмотреть →'],
+           ['b','Аукцион № 114','идёт','После торгов заявки поступят на рассмотрение','F6','','Наблюдать →'],
+           ['','Архив','3','завершённые процедуры с протоколами','F9','','Открыть →']];
+  }
+  var QC={customer:[['create','Создать закупку','Alt+N'],['apps','Заявки по закупкам','Alt+2'],['report','Сформировать отчёт','Alt+R'],['search','Поиск закупки','Alt+F']],
+          supplier:[['search','Найти закупку','Alt+F'],['apps','Мои заявки','Alt+2'],['auc','Текущий аукцион','Alt+4'],['arch','История участия','Alt+6']],
+          commission:[['rev','Очередь рассмотрения','Alt+3'],['auc','Ход аукциона','Alt+4'],['report','Сформировать отчёт','Alt+R'],['arch','Архив','Alt+6']]}[r];
+  quick='<ul class="links">'+QC.map(function(q){return '<li><a data-act="quick" data-q="'+q[0]+'">'+q[1]+'</a><kbd>'+q[2]+'</kbd></li>'}).join('')+'</ul>';
+  return '<section class="hero"><div class="kicker">'+esc(H[0])+'</div><h1>'+H[1]+'</h1><p>'+H[2]+'</p><div class="row mt">'+H[3]+'</div></section>'+
+   '<div class="grid mt">'+cards.map(function(c){return '<div class="card '+c[0]+' c4" data-go="'+c[4]+'" data-id="'+c[5]+'"><div class="kicker">'+c[1]+'</div><div class="big">'+c[2]+'</div><p class="s">'+c[3]+'</p><div class="more">'+c[6]+'</div></div>'}).join('')+
+   '<div class="panel accent c6"><h3 class="t">Быстрые команды</h3>'+quick+'</div>'+
+   '<div class="panel steel c6"><h3 class="t">Уведомления</h3><ul class="feed">'+
+     (r==='customer'?'<li>Поступила новая заявка по № 0301-2026-117<small>сегодня, 09:42</small></li><li>Аукцион № 0301-2026-114 идёт<small>сегодня, 10:00</small></li><li>Подведены итоги по № 0301-2026-098<small>вчера</small></li>'
+     :r==='supplier'?'<li>Опубликована закупка «Поставка ноутбуков для учебных классов»<small>сегодня, 08:15</small></li><li>Ваша заявка допущена к аукциону № 0301-2026-114<small>вчера</small></li><li>Вы признаны победителем по № 0301-2026-098<small>15.11.2026</small></li>'
+     :'<li>Назначено рассмотрение по № 0301-2026-109<small>сегодня, 09:00</small></li><li>Аукцион № 0301-2026-114 идёт<small>сегодня, 10:00</small></li><li>Протокол по № 0302-2026-044 ожидает подписи<small>вчера</small></li>')+
+   '</ul></div></div>';
+};
+
+/* ---- F2 Список закупок ---- */
+function purchList(){
+  var f=S.f2,r=S.role;
+  return S.D.P.filter(function(p){
+    if(p.archived||p.stage==='done')return false;
+    if(r==='customer'&&f.mine&&p.org!==ORG)return false;
+    if(r!=='customer'&&p.stage==='draft')return false;
+    if(r==='customer'&&p.stage==='draft'&&p.org!==ORG)return false;
+    if(f.stage&&p.stage!==f.stage)return false;
+    if(f.okpd&&p.okpd!==f.okpd)return false;
+    if(f.q){var q=f.q.toLowerCase();if((p.name+' '+p.id+' '+p.org).toLowerCase().indexOf(q)<0)return false}
+    return true;
+  });
+}
+SCREENS.F2=function(){
+  var f=S.f2,r=S.role,list=purchList();
+  var stageOpts='<option value="">Все этапы</option>'+['apply','auction','review','results'].concat(r==='customer'?['draft']:[]).map(function(k){return '<option value="'+k+'"'+(f.stage===k?' selected':'')+'>'+STAGES[k]+'</option>'}).join('');
+  var okpdOpts='<option value="">Все коды ОКПД2</option>'+Object.keys(OKPD).map(function(k){return '<option value="'+k+'"'+(f.okpd===k?' selected':'')+'>'+OKPD[k]+'</option>'}).join('');
+  var rows=list.map(function(p){return '<tr class="click" data-go="F3" data-id="'+p.id+'"><td><a class="link" style="color:var(--night)">'+esc(p.name)+'</a><small>№ '+p.id+' · '+esc(p.org)+'</small></td><td class="hm">'+esc(p.method)+'</td><td class="num">'+money(p.nmck)+'</td><td>'+st(p.stage)+'</td><td class="num hm">'+(p.deadline||'—')+'</td></tr>'}).join('');
+  return crumbs([['Главная','F1'],['Закупки']])+
+   '<div class="spread" style="margin-bottom:24px"><h1 class="t">'+(r==='customer'&&f.mine?'Мои закупки':'Закупки')+'</h1>'+(r==='customer'?'<button class="btn" data-act="create">Создать закупку</button>':'')+'</div>'+
+   (r==='customer'?'<div class="tabs"><a class="'+(f.mine?'cur':'')+'" data-act="f2mine" data-v="1">Мои закупки</a><a class="'+(!f.mine?'cur':'')+'" data-act="f2mine" data-v="0">Все закупки</a></div>':'')+
+   '<div class="panel steel"><form class="form" id="f2form">'+
+    '<div class="fld c4"><label>Поиск</label><input id="f2q" type="search" value="'+esc(f.q)+'" placeholder="Номер, наименование, заказчик"></div>'+
+    '<div class="fld c3"><label>Этап</label><select id="f2stage" data-filter="stage">'+stageOpts+'</select></div>'+
+    '<div class="fld c3"><label>ОКПД2</label><select id="f2okpd" data-filter="okpd">'+okpdOpts+'</select></div>'+
+    '<div class="fld c2" style="grid-column:span 2;justify-content:flex-end"><button class="btn" type="submit" style="justify-content:center">Найти</button></div>'+
+   '</form><div class="row" style="margin-top:12px"><span class="kicker">Найдено: '+list.length+'</span>'+(f.q||f.stage||f.okpd?'<button class="link" data-act="f2reset">Сбросить фильтры</button>':'')+'</div>'+
+   '<table class="list mt"><thead><tr><th>Объект закупки</th><th class="hm">Способ</th><th>НМЦК, ₽</th><th>Этап</th><th class="hm">Подача до</th></tr></thead><tbody>'+(rows||'<tr><td colspan="5">По заданным условиям закупки не найдены.</td></tr>')+'</tbody></table></div>';
+};
+
+/* ---- F2N Форма закупки ---- */
+SCREENS.F2N=function(){
+  var d=S.draft||{name:'',nmck:'',method:'',deadline:'',okpd:'',req:'',docs:[]},e=d.errors||{};
+  function F(id,label,html,cls,req){return '<div class="fld '+cls+(e[id]?' err':'')+'"><label>'+label+(req?' <i>*</i>':'')+'</label>'+html+(e[id]?'<span class="emsg">'+e[id]+'</span>':'')+'</div>'}
+  return crumbs([['Главная','F1'],['Закупки','F2'],[d.id?'Редактирование':'Новая закупка']])+
+   '<h1 class="t" style="margin-bottom:24px">'+(d.id?'Редактирование закупки № '+d.id:'Новая закупка')+'</h1>'+
+   (Object.keys(e).length?'<div class="alertbox"><b>Не заполнены обязательные поля.</b> Исправьте отмеченные поля и сохраните ещё раз.</div>':'')+
+   '<div class="grid"><div class="panel accent c8"><div class="form">'+
+    F('name','Наименование объекта закупки','<input id="p_name" data-field="name" value="'+esc(d.name)+'" autofocus>','c12',1)+
+    F('nmck','Начальная (максимальная) цена контракта, ₽','<input id="p_nmck" data-field="nmck" inputmode="numeric" value="'+esc(d.nmck)+'" placeholder="Например, 450000">','c6',1)+
+    F('method','Способ определения поставщика','<select id="p_method" data-field="method"><option value="">— выберите —</option>'+METHODS.map(function(m){return '<option'+(d.method===m?' selected':'')+'>'+m+'</option>'}).join('')+'</select>','c6',1)+
+    F('deadline','Окончание подачи заявок','<input id="p_deadline" data-field="deadline" value="'+esc(d.deadline)+'" placeholder="дд.мм.гггг">','c6',1)+
+    F('okpd','Код ОКПД2','<select id="p_okpd" data-field="okpd"><option value="">— выберите —</option>'+Object.keys(OKPD).map(function(k){return '<option value="'+k+'"'+(d.okpd===k?' selected':'')+'>'+OKPD[k]+'</option>'}).join('')+'</select>','c6',0)+
+    F('req','Требования к участникам','<textarea id="p_req" data-field="req" placeholder="Необязательно">'+esc(d.req)+'</textarea>','c12',0)+
+   '</div></div>'+
+   '<div class="panel steel c4"><h3 class="t">Документы закупки</h3><ul class="files">'+(d.docs.length?d.docs.map(function(x){return '<li><span>'+I('doc')+esc(x)+'</span><button class="link" data-act="p_unattach" data-f="'+esc(x)+'">Удалить</button></li>'}).join(''):'<li><span class="s" style="color:var(--muted)">Документы не прикреплены</span></li>')+'</ul>'+
+   (e.docs?'<div class="fld err"><span class="emsg">'+e.docs+'</span></div>':'')+
+   '<button class="btn ghost mt" data-act="p_attach">'+I('clip')+'Прикрепить документ</button></div>'+
+   '<div class="c12 row"><button class="btn" data-act="p_save">Сохранить черновик</button><button class="btn ghost" data-act="p_cancel">Отмена</button><span class="kicker">Поля, отмеченные <b style="color:var(--brick)">*</b>, обязательны</span></div></div>';
+};
+
+/* ---- F3 Карточка закупки ---- */
+SCREENS.F3=function(){
+  var p=P(S.params.id);if(!p)return '<p>Закупка не найдена</p>';
+  var r=S.role,tab=S.params.tab||'info',apps=S.D.A.filter(function(a){return a.pid===p.id&&a.st!=='draft'});
+  var acts='';
+  if(r==='customer'&&p.org===ORG){
+    if(p.stage==='draft')acts='<button class="btn ghost" data-act="p_edit">Редактировать</button><button class="btn" data-act="p_publish">Опубликовать</button>';
+    if(p.stage==='apply')acts='<button class="btn ghost" data-act="p_apps">Заявки ('+apps.length+')</button>';
+    if(p.stage==='results')acts='<button class="btn" data-act="p_complete">Завершить закупку</button>';
+    if(p.stage==='auction')acts='<button class="btn ghost" data-go="F6">Наблюдать за аукционом</button>';
+  }
+  if(r==='supplier'){
+    var my=S.D.A.filter(function(a){return a.pid===p.id&&a.mine})[0];
+    if(p.stage==='apply'&&!my)acts='<button class="btn" data-act="a_new">Подать заявку</button>';
+    else if(my&&my.st==='draft')acts='<button class="btn" data-go="F5N" data-id="'+my.id+'">Продолжить заявку</button>';
+    else if(my)acts='<button class="btn ghost" data-go="F5" data-id="'+my.id+'">Моя заявка</button>';
+    if(p.stage==='auction'&&my&&my.st==='adm')acts+='<button class="btn" data-go="F6">Перейти к аукциону</button>';
+  }
+  if(r==='commission'&&p.stage==='review')acts='<button class="btn" data-go="F7D" data-id="'+p.id+'">Перейти к рассмотрению</button>';
+  var tabs=[['info','Сведения'],['docs','Документы ('+p.docs.length+')']];
+  if(r!=='supplier')tabs.push(['apps','Заявки ('+apps.length+')']);
+  tabs.push(['hist','История']);
+  var body;
+  if(tab==='info')body='<div class="kv"><div>Номер закупки</div><div>'+p.id+'</div><div>Заказчик</div><div>'+esc(p.org)+'</div><div>Способ</div><div>'+esc(p.method)+'</div><div>НМЦК</div><div class="num">'+money(p.nmck)+' ₽</div><div>ОКПД2</div><div>'+(OKPD[p.okpd]||'—')+'</div><div>Окончание подачи заявок</div><div>'+(p.deadline||'—')+'</div><div>Этап</div><div>'+st(p.stage)+'</div>'+(p.winner?'<div>Победитель</div><div><b>'+esc(p.winner)+'</b> · '+money(p.winPrice)+' ₽</div>':'')+(p.req?'<div>Требования</div><div>'+esc(p.req)+'</div>':'')+'</div>';
+  else if(tab==='docs')body='<ul class="files">'+(p.docs.length?p.docs.map(function(x){return '<li><span>'+I('doc')+esc(x)+'</span><button class="link" data-act="doc_view" data-f="'+esc(x)+'">Открыть</button></li>'}).join(''):'<li>Документы не прикреплены</li>')+'</ul>';
+  else if(tab==='apps')body=apps.length?'<table class="list"><thead><tr><th>Участник</th><th>Цена, ₽</th><th>Статус</th></tr></thead><tbody>'+apps.map(function(a){return '<tr><td>'+esc(a.sup)+'<small>'+a.id+'</small></td><td class="num">'+money(a.price)+'</td><td>'+ast(a.st)+'</td></tr>'}).join('')+'</tbody></table><button class="btn ghost mt" data-act="p_apps">Открыть список заявок</button>':'<p class="s">Заявок пока нет.</p>';
+  else body='<ul class="feed">'+p.history.slice().reverse().map(function(h){return '<li>'+esc(h.what)+'<small>'+esc(h.t)+' · '+esc(h.who)+'</small></li>'}).join('')+'</ul>';
+  return crumbs([['Главная','F1'],['Закупки','F2'],['№ '+p.id]])+
+   '<div class="spread" style="margin-bottom:24px"><div><div class="kicker">Закупка № '+p.id+' · '+esc(p.org)+'</div><h1 class="t">'+esc(p.name)+'</h1></div><div class="row">'+st(p.stage)+'</div></div>'+
+   '<div class="grid"><div class="panel c8"><div class="tabs">'+tabs.map(function(t){return '<a class="'+(t[0]===tab?'cur':'')+'" data-act="p_tab" data-tab="'+t[0]+'">'+t[1]+'</a>'}).join('')+'</div>'+body+'</div>'+
+   '<div class="panel accent c4"><h3 class="t">Действия</h3>'+(acts?'<div class="row" style="flex-direction:column;align-items:stretch">'+acts+'</div>':'<p class="s">Для вашей роли на этом этапе действий нет.</p>')+
+   '<div class="mt"><div class="kicker">НМЦК</div><div style="font-family:var(--serif);font-size:32px;line-height:48px;font-weight:700;color:var(--night)" class="num">'+money(p.nmck)+' ₽</div></div></div></div>';
+};
+
+/* ---- F4 Список заявок ---- */
+SCREENS.F4=function(){
+  var r=S.role,pid=S.params.pid||'',key=pid||'all',f=S.f4[key]||(S.f4[key]={st:'',sort:'date'});
+  var list=S.D.A.filter(function(a){
+    if(r==='supplier')return a.mine;
+    var p=P(a.pid);if(r==='customer'&&p.org!==ORG)return false;
+    if(a.st==='draft')return false;
+    return !pid||a.pid===pid;
+  }).filter(function(a){return !f.st||a.st===f.st});
+  list.sort(function(a,b){return f.sort==='price'?a.price-b.price:(b.date.split('.').reverse().join('')).localeCompare(a.date.split('.').reverse().join(''))});
+  var p=pid?P(pid):null;
+  var stOpts='<option value="">Все статусы</option>'+['sent','adm','rej','win','wd'].concat(r==='supplier'?['draft']:[]).map(function(k){return '<option value="'+k+'"'+(f.st===k?' selected':'')+'>'+APPST[k]+'</option>'}).join('');
+  var rows=list.map(function(a){var pp=P(a.pid);return '<tr class="click'+(S.params.hl===a.id?' hl':'')+'" data-go="'+(r==='supplier'&&a.st==='draft'?'F5N':'F5')+'" data-id="'+a.id+'"><td>'+(r==='supplier'?esc(pp.name):esc(a.sup))+'<small>'+a.id+(pid?'':' · закупка № '+a.pid)+'</small></td><td class="num">'+money(a.price)+'</td><td class="hm num">'+a.date+'</td><td>'+ast(a.st)+'</td></tr>'}).join('');
+  return crumbs(p?[['Главная','F1'],['Закупки','F2'],['№ '+p.id,'F3',p.id],['Заявки']]:[['Главная','F1'],[r==='supplier'?'Мои заявки':'Заявки']])+
+   '<div style="margin-bottom:24px"><div class="kicker">'+(p?'Закупка № '+p.id:(r==='supplier'?'ООО «ТехСнаб»':'Все мои закупки'))+'</div><h1 class="t">'+(r==='supplier'?'Мои заявки':p?'Заявки: '+esc(p.name):'Заявки по закупкам')+'</h1></div>'+
+   '<div class="panel steel"><div class="form">'+
+    '<div class="fld c4"><label>Статус заявки</label><select id="f4st" data-f4="st">'+stOpts+'</select></div>'+
+    '<div class="fld c4"><label>Сортировка</label><select id="f4sort" data-f4="sort"><option value="date"'+(f.sort==='date'?' selected':'')+'>Сначала новые</option><option value="price"'+(f.sort==='price'?' selected':'')+'>По возрастанию цены</option></select></div>'+
+   '</div><div class="kicker" style="margin-top:12px">Найдено: '+list.length+'</div>'+
+   '<table class="list mt"><thead><tr><th>'+(r==='supplier'?'Закупка':'Участник')+'</th><th>Цена, ₽</th><th class="hm">Дата подачи</th><th>Статус</th></tr></thead><tbody>'+(rows||'<tr><td colspan="4">Заявки не найдены.</td></tr>')+'</tbody></table></div>';
+};
+
+/* ---- F5 Карточка заявки ---- */
+SCREENS.F5=function(){
+  var a=A(S.params.id);if(!a)return '<p>Заявка не найдена</p>';
+  var p=P(a.pid),r=S.role,back=r==='supplier'?['Мои заявки','F4']:['Заявки','F4'];
+  return crumbs([['Главная','F1'],['Закупка № '+p.id,'F3',p.id],[back[0],'F4back'],[a.id]])+
+   '<div class="spread" style="margin-bottom:24px"><div><div class="kicker">Заявка '+a.id+' · закупка № '+p.id+'</div><h1 class="t">'+esc(r==='supplier'?p.name:a.sup)+'</h1></div>'+ast(a.st)+'</div>'+
+   '<div class="grid"><div class="panel c8"><h3 class="t">Сведения о поставщике</h3><div class="kv"><div>Участник</div><div>'+esc(a.sup)+'</div><div>ИНН</div><div>'+a.inn+'</div><div>Адрес</div><div>'+esc(a.addr)+'</div><div>Контактное лицо</div><div>'+esc(a.contact)+'</div><div>Цена предложения</div><div class="num"><b>'+money(a.price)+' ₽</b></div><div>Срок исполнения</div><div>'+a.term+' дн.</div><div>Дата подачи</div><div>'+a.date+'</div></div></div>'+
+   '<div class="panel steel c4"><h3 class="t">Документы заявки</h3><ul class="files">'+a.docs.map(function(x){return '<li><span>'+I('doc')+esc(x)+'</span><button class="link" data-act="doc_view" data-f="'+esc(x)+'">Открыть</button></li>'}).join('')+'</ul>'+
+   '<button class="btn ghost mt" data-act="f4back">← К списку заявок</button></div></div>';
+};
+
+/* ---- F5N Форма заявки (поставщик) ---- */
+SCREENS.F5N=function(){
+  var a=A(S.params.id);if(!a)return '<p>Заявка не найдена</p>';
+  var p=P(a.pid),e=a.errors||{};
+  function F(id,label,html,cls,req){return '<div class="fld '+cls+(e[id]?' err':'')+'"><label>'+label+(req?' <i>*</i>':'')+'</label>'+html+(e[id]?'<span class="emsg">'+e[id]+'</span>':'')+'</div>'}
+  return crumbs([['Главная','F1'],['Закупки','F2'],['№ '+p.id,'F3',p.id],['Заявка']])+
+   '<div style="margin-bottom:24px"><div class="kicker">Заявка на участие · закупка № '+p.id+' · НМЦК '+money(p.nmck)+' ₽</div><h1 class="t">'+esc(p.name)+'</h1></div>'+
+   (Object.keys(e).length?'<div class="alertbox"><b>Заявка не может быть отправлена.</b> Исправьте отмеченные поля.</div>':'')+
+   '<div class="grid"><div class="panel accent c8"><div class="form">'+
+    F('price','Цена предложения, ₽','<input id="a_price" data-afield="price" inputmode="numeric" value="'+(a.price?a.price:'')+'" placeholder="Не выше НМЦК" autofocus>','c6',1)+
+    F('term','Срок поставки, дней','<input id="a_term" data-afield="term" inputmode="numeric" value="'+(a.term||'')+'">','c6',1)+
+    F('contact','Контактное лицо','<input id="a_contact" data-afield="contact" value="'+esc(a.contact)+'">','c12',1)+
+   '</div></div>'+
+   '<div class="panel steel c4"><h3 class="t">Документы заявки</h3><ul class="files">'+(a.docs.length?a.docs.map(function(x){return '<li><span>'+I('doc')+esc(x)+'</span><button class="link" data-act="a_unattach" data-f="'+esc(x)+'">Удалить</button></li>'}).join(''):'<li><span style="color:var(--muted)">Документы не прикреплены</span></li>')+'</ul>'+
+   (e.docs?'<div class="fld err"><span class="emsg">'+e.docs+'</span></div>':'')+
+   '<button class="btn ghost mt" data-act="a_attach">'+I('clip')+'Прикрепить документ</button><p class="s mt">Обязательна выписка из ЕГРЮЛ.</p></div>'+
+   '<div class="c12 row"><button class="btn" data-act="a_send">Отправить заявку</button><button class="btn ghost" data-act="a_savedraft">Сохранить черновик</button><button class="btn ghost" data-go="F3" data-id="'+p.id+'">Отмена</button></div></div>';
+};
+
+/* ---- F6 Аукцион ---- */
+SCREENS.F6=function(){
+  var au=S.D.auction,p=P(au.pid),r=S.role,can=r==='supplier';
+  return crumbs([['Главная','F1'],['Аукцион']])+
+   '<section class="auc"><div class="kicker">Электронный аукцион · закупка № '+p.id+' · '+esc(p.org)+'</div><h1 class="t" style="color:#fff">'+esc(p.name)+'</h1>'+
+   '<div class="spread"><div><div class="kicker">Лучшее предложение</div><div class="big num" id="au_best">'+money(au.best)+' ₽</div></div><div style="text-align:right"><div class="kicker">До окончания торгов</div><div class="big num" id="au_timer">--:--</div></div></div>'+
+   '<div class="stats"><div><b class="num">'+money(p.nmck)+' ₽</b><span>НМЦК</span></div><div><b class="num">'+money(au.step)+' ₽</b><span>шаг аукциона (0,5 %)</span></div><div><b>4</b><span>участника</span></div><div><b>'+(can?(au.myBest&&au.myBest<=au.best?'1 (лучшее)':'не лучшее'):'наблюдатель')+'</b><span>'+(can?'ваше место':'ваша роль')+'</span></div></div></section>'+
+   '<div class="grid mt"><div class="panel accent c6"><h3 class="t">Ценовое предложение</h3>'+
+   (can?'<div class="form"><div class="fld c12"><label>Ваше предложение, ₽</label><input id="bid" inputmode="numeric" data-bid="1" placeholder="Ниже лучшего хотя бы на шаг"><span class="hint">Лучшее сейчас: '+money(au.best)+' ₽. Шаг: '+money(au.step)+' ₽.</span></div></div><div class="row mt"><button class="btn ghost" data-act="bid_step">−1 шаг</button><button class="btn" data-act="bid_send">Подать предложение</button></div>'
+       :'<div class="infobox">Подача предложений доступна только допущенным участникам. Вы наблюдаете за ходом процедуры.</div>')+
+   '</div><div class="panel steel c6"><h3 class="t">История предложений</h3><table class="list"><thead><tr><th>Время</th><th>Участник</th><th>Цена, ₽</th></tr></thead><tbody>'+au.bids.slice().reverse().map(function(b){return '<tr><td class="num">'+b.t+'</td><td>'+esc(b.who)+'</td><td class="num">'+money(b.price)+'</td></tr>'}).join('')+'</tbody></table></div></div>';
+};
+var aucTimer=null;
+function startAuctionTimer(){
+  clearInterval(aucTimer);
+  function tick(){var el=document.getElementById('au_timer');if(!el){clearInterval(aucTimer);return}var s=Math.max(0,Math.round((S.D.auction.endsAt-Date.now())/1000));el.textContent=String(Math.floor(s/60)).padStart(2,'0')+':'+String(s%60).padStart(2,'0')}
+  tick();aucTimer=setInterval(tick,1000);
+}
+
+/* ---- F7 Очередь рассмотрения ---- */
+SCREENS.F7=function(){
+  var list=S.D.P.filter(function(p){return p.stage==='review'});
+  return crumbs([['Главная','F1'],['Рассмотрение']])+'<h1 class="t" style="margin-bottom:24px">Очередь рассмотрения</h1>'+
+   '<div class="panel accent"><table class="list"><thead><tr><th>Закупка</th><th>Заявок</th><th>Не рассмотрено</th><th class="hm">Срок</th><th></th></tr></thead><tbody>'+
+   list.map(function(p){var ap=S.D.A.filter(function(a){return a.pid===p.id});var und=ap.filter(function(a){return !a.decision}).length;return '<tr class="click" data-go="F7D" data-id="'+p.id+'"><td>'+esc(p.name)+'<small>№ '+p.id+' · '+esc(p.org)+'</small></td><td class="num">'+(ap.length||3)+'</td><td class="num">'+(ap.length?und:3)+'</td><td class="hm num">20.11.2026</td><td><button class="btn sm">Открыть</button></td></tr>'}).join('')+
+   '</tbody></table></div>';
+};
+/* ---- F7D Рассмотрение заявок по закупке ---- */
+SCREENS.F7D=function(){
+  var p=P(S.params.id);var ap=S.D.A.filter(function(a){return a.pid===p.id});
+  if(!ap.length)return crumbs([['Рассмотрение','F7'],['№ '+p.id]])+'<div class="panel"><p class="s">Заявки по этой закупке рассматривает другая комиссия.</p></div>';
+  var all=ap.every(function(a){return a.decision});
+  return crumbs([['Главная','F1'],['Рассмотрение','F7'],['№ '+p.id]])+
+   '<div class="spread" style="margin-bottom:24px"><div><div class="kicker">Рассмотрение заявок · закупка № '+p.id+' · НМЦК '+money(p.nmck)+' ₽</div><h1 class="t">'+esc(p.name)+'</h1></div><div class="row"><button class="btn ghost" data-act="r_compare">Сравнить заявки</button></div></div>'+
+   '<div class="panel accent"><table class="list"><thead><tr><th>Заявка, участник</th><th>Цена, ₽</th><th class="hm">Документы</th><th style="min-width:200px">Решение</th><th style="min-width:220px">Основание (при отклонении)</th></tr></thead><tbody>'+
+   ap.map(function(a){return '<tr><td><a class="link" data-go="F5" data-id="'+a.id+'" style="color:var(--night)">'+esc(a.sup)+'</a><small>'+a.id+'</small>'+(a.note?'<small style="color:var(--brick)">'+esc(a.note)+'</small>':'')+'</td><td class="num">'+money(a.price)+'</td><td class="hm">'+a.docs.map(function(x){return '<button class="link" data-act="doc_view" data-f="'+esc(x)+'" style="display:block;font-weight:400">'+esc(x)+'</button>'}).join('')+'</td>'+
+     '<td><select class="inp" data-dec="'+a.id+'"><option value="">— не рассмотрена —</option><option value="ok"'+(a.decision==='ok'?' selected':'')+'>Соответствует</option><option value="no"'+(a.decision==='no'?' selected':'')+'>Не соответствует</option></select></td>'+
+     '<td><input class="inp" data-reason="'+a.id+'" value="'+esc(a.reason||'')+'" placeholder="Причина отклонения"'+(a.decision==='no'?'':' disabled')+'></td></tr>'}).join('')+
+   '</tbody></table>'+(S.params.err?'<div class="alertbox mt">'+esc(S.params.err)+'</div>':'')+
+   '<div class="row mt"><button class="btn" data-act="r_save">Сохранить решения</button><button class="btn ghost" data-act="r_results"'+(all&&p.reviewSaved?'':' disabled')+'>Перейти к итогам</button></div></div>';
+};
+/* ---- F8 Итоги ---- */
+SCREENS.F8=function(){
+  var p=P(S.params.id);var ok=S.D.A.filter(function(a){return a.pid===p.id&&a.decision==='ok'}).sort(function(a,b){return a.price-b.price});
+  return crumbs([['Главная','F1'],['Рассмотрение','F7'],['№ '+p.id,'F7D',p.id],['Итоги']])+
+   '<div style="margin-bottom:24px"><div class="kicker">Подведение итогов · закупка № '+p.id+'</div><h1 class="t">'+esc(p.name)+'</h1></div>'+
+   (p.stage==='results'?'<div class="okbox">Победитель зафиксирован: <b>'+esc(p.winner)+'</b>, '+money(p.winPrice)+' ₽.</div>':'')+
+   '<div class="panel accent"><h3 class="t">Заявки, признанные соответствующими</h3><p class="s">Победителем признаётся участник, предложивший наименьшую цену среди соответствующих заявок.</p><table class="list mt"><thead><tr><th></th><th>Участник</th><th>Цена, ₽</th><th class="hm">Срок, дн.</th></tr></thead><tbody>'+
+   ok.map(function(a){return '<tr><td style="width:48px"><input type="radio" name="win" value="'+a.id+'" data-win="1"'+(p.winnerApp===a.id?' checked':'')+(p.stage==='results'?' disabled':'')+'></td><td>'+esc(a.sup)+'<small>'+a.id+'</small></td><td class="num">'+money(a.price)+'</td><td class="hm num">'+a.term+'</td></tr>'}).join('')+
+   '</tbody></table>'+(p.stage!=='results'?'<div class="row mt"><button class="btn" data-act="w_fix">Зафиксировать победителя</button></div>':'')+'</div>';
+};
+/* ---- F9 Архив ---- */
+SCREENS.F9=function(){
+  var f=S.f9,list=S.D.P.filter(function(p){return p.archived&&(S.role!=='supplier'||S.D.A.some(function(a){return a.pid===p.id&&a.mine})||p.winner==='ООО «ТехСнаб»')&&(!f.q||(p.name+' '+p.id).toLowerCase().indexOf(f.q.toLowerCase())>=0)});
+  return crumbs([['Главная','F1'],['Архив']])+'<h1 class="t" style="margin-bottom:24px">'+(S.role==='supplier'?'История участия':'Архив закупок')+'</h1>'+
+   '<div class="panel green"><form class="form" id="f9form"><div class="fld c8"><label>Поиск в архиве</label><input id="f9q" type="search" value="'+esc(f.q)+'" placeholder="Номер или наименование"></div><div class="fld c4" style="justify-content:flex-end"><button class="btn" type="submit" style="justify-content:center">Найти</button></div></form>'+
+   '<table class="list mt"><thead><tr><th>Закупка</th><th class="hm">Победитель</th><th>Цена контракта, ₽</th><th class="hm">Завершена</th></tr></thead><tbody>'+
+   (list.map(function(p){return '<tr class="click" data-go="F10" data-id="'+p.id+'"><td>'+esc(p.name)+'<small>№ '+p.id+'</small></td><td class="hm">'+esc(p.winner||'—')+'</td><td class="num">'+money(p.winPrice)+'</td><td class="hm num">'+(p.closed||'—')+'</td></tr>'}).join('')||'<tr><td colspan="4">В архиве ничего не найдено.</td></tr>')+'</tbody></table></div>';
+};
+/* ---- F10 Архивная карточка ---- */
+SCREENS.F10=function(){
+  var p=P(S.params.id);
+  return crumbs([['Главная','F1'],['Архив','F9'],['№ '+p.id]])+
+   '<div class="spread" style="margin-bottom:24px"><div><div class="kicker">Архивная закупка № '+p.id+' · только просмотр</div><h1 class="t">'+esc(p.name)+'</h1></div>'+st('done')+'</div>'+
+   '<div class="grid"><div class="panel green c8"><div class="kv"><div>Заказчик</div><div>'+esc(p.org)+'</div><div>Способ</div><div>'+esc(p.method)+'</div><div>НМЦК</div><div class="num">'+money(p.nmck)+' ₽</div><div>Победитель</div><div><b>'+esc(p.winner)+'</b></div><div>Цена контракта</div><div class="num">'+money(p.winPrice)+' ₽</div><div>Экономия</div><div class="num">'+money(p.nmck-p.winPrice)+' ₽ ('+((p.nmck-p.winPrice)/p.nmck*100).toFixed(1).replace('.',',')+' %)</div><div>Завершена</div><div>'+(p.closed||'—')+'</div></div>'+
+   '<h3 class="t mt">История действий</h3><ul class="feed">'+p.history.slice().reverse().map(function(h){return '<li>'+esc(h.what)+'<small>'+esc(h.t)+' · '+esc(h.who)+'</small></li>'}).join('')+'</ul></div>'+
+   '<div class="panel c4"><h3 class="t">Документы</h3><ul class="files">'+p.docs.map(function(x){return '<li><span>'+I('doc')+esc(x)+'</span><button class="link" data-act="doc_view" data-f="'+esc(x)+'">Открыть</button></li>'}).join('')+'</ul>'+
+   (S.role!=='supplier'?'<button class="btn mt" data-act="rep_arch">Сформировать отчёт</button>':'')+'</div></div>';
+};
+/* ---- F11 Отчёты ---- */
+SCREENS.F11=function(){
+  var last=S.D.reports[S.D.reports.length-1];
+  return crumbs([['Главная','F1'],['Отчёты']])+'<h1 class="t" style="margin-bottom:24px">Отчёты</h1>'+
+   '<div class="grid"><div class="panel accent c4"><div class="form"><div class="fld c12"><label>Вид отчёта</label><select id="rep_type"><option>Сводный по закупкам</option><option>Итоги закупки</option><option>Экономия по итогам торгов</option></select></div><div class="fld c12"><label>Период</label><select id="rep_period"><option>2026 год</option><option>IV квартал 2026</option><option>Ноябрь 2026</option></select></div></div><button class="btn mt" data-act="rep_make">Сформировать</button></div>'+
+   '<div class="panel c8"><h3 class="t">Результат</h3>'+(last?reportHTML(last):'<p class="s">Выберите вид отчёта и период, затем нажмите «Сформировать».</p>')+'</div></div>';
+};
+function reportHTML(r){
+  if(r.pid){var p=P(r.pid);return '<div class="okbox">Отчёт «Итоги закупки» сформирован '+r.t+'.</div><div class="kv"><div>Закупка</div><div>№ '+p.id+' · '+esc(p.name)+'</div><div>Победитель</div><div>'+esc(p.winner)+'</div><div>НМЦК</div><div class="num">'+money(p.nmck)+' ₽</div><div>Цена контракта</div><div class="num">'+money(p.winPrice)+' ₽</div><div>Экономия</div><div class="num">'+money(p.nmck-p.winPrice)+' ₽</div></div>'}
+  return '<div class="okbox">Отчёт «'+esc(r.type)+'» за период «'+esc(r.period)+'» сформирован '+r.t+'.</div><table class="list"><thead><tr><th>Показатель</th><th>Значение</th></tr></thead><tbody><tr><td>Закупок опубликовано</td><td class="num">12</td></tr><tr><td>Сумма НМЦК, ₽</td><td class="num">'+money(41870000)+'</td></tr><tr><td>Заключено контрактов</td><td class="num">7</td></tr><tr><td>Экономия, %</td><td class="num">6,8</td></tr></tbody></table>';
+}
+/* ---- F12 Настройки ---- */
+SCREENS.F12=function(){
+  var QL={create:'Создать закупку',apps:'Заявки',report:'Сформировать отчёт',search:'Поиск закупки',auc:'Текущий аукцион',arch:'Архив',rev:'Очередь рассмотрения'};
+  return crumbs([['Главная','F1'],['Настройки']])+'<h1 class="t" style="margin-bottom:24px">Настройки</h1><div class="grid">'+
+   '<div class="panel accent c6"><h3 class="t">Панель быстрых команд</h3><ul class="links">'+Object.keys(QL).map(function(k){return '<li><label style="display:flex;gap:12px;align-items:center;cursor:pointer"><input type="checkbox" data-qc="'+k+'"'+(S.settings.quick.indexOf(k)>=0?' checked':'')+'>'+QL[k]+'</label></li>'}).join('')+'</ul></div>'+
+   '<div class="panel steel c6"><h3 class="t">Горячие клавиши</h3><table class="list"><thead><tr><th>Команда</th><th>Сочетание</th></tr></thead><tbody><tr><td>Главная</td><td>Alt+H</td></tr><tr><td>Создать закупку</td><td>Alt+N</td></tr><tr><td>Поиск закупки</td><td>Alt+F</td></tr><tr><td>Заявки</td><td>Alt+2</td></tr><tr><td>Рассмотрение</td><td>Alt+3</td></tr><tr><td>Аукцион</td><td>Alt+4</td></tr><tr><td>Архив</td><td>Alt+6</td></tr><tr><td>Отчёт</td><td>Alt+R</td></tr></tbody></table></div></div>';
+};
+SCREENS.HELP=function(){
+  return crumbs([['Главная','F1'],['Справка']])+'<h1 class="t" style="margin-bottom:24px">Справка</h1><div class="panel"><ul class="feed">'+
+   '<li><b>Создание закупки.</b> Главная → «Создать закупку» → заполните поля → прикрепите документы → «Сохранить черновик» → в карточке «Опубликовать».</li>'+
+   '<li><b>Подача заявки.</b> Закупки → фильтры → карточка закупки → «Подать заявку» → цена, срок, документы → «Отправить заявку».</li>'+
+   '<li><b>Рассмотрение.</b> Рассмотрение → закупка → решения по каждой заявке → «Сохранить решения» → «Перейти к итогам» → победитель.</li>'+
+   '<li><b>Архив.</b> Завершённые закупки доступны только для просмотра; из архивной карточки можно сформировать отчёт.</li></ul></div>';
+};
+
+/* ---- завершение тестирования ---- */
+SCREENS.END=function(){
+  var t=S.lastSession;
+  return '<section class="start-hero"><h1>Спасибо! Тестирование завершено</h1><p>Результаты сохранены в журнале событий. Передайте устройство наблюдателю.</p></section>'+
+   '<div class="grid mt"><div class="panel accent c12"><h3 class="t">Сохраните лог-файл</h3><p class="s">Нажмите кнопку — файл с результатами скачается на устройство. '+(DB?'Копия уже сохранена в базе страницы.':'Отправьте этот файл автору работы.')+'</p><div class="row mt"><button class="btn" data-act="exp_session" data-fmt="csv">Скачать лог-файл (CSV)</button><button class="btn ghost" data-act="exp_session" data-fmt="jsonl">JSONL</button><button class="btn ghost" data-act="exp_session" data-fmt="txt">PLAIN TEXT</button></div></div><div class="panel c12"><h3 class="t">Итоги сеанса '+esc(t||'')+'</h3><div id="endsum"></div><div class="row mt"><button class="btn" data-go="LOG">Журнал событий</button><button class="btn ghost" data-act="test_reg">Следующий испытуемый</button><button class="btn ghost" data-go="start">На стартовый экран</button></div></div></div>';
+};
+
+/* ---- журнал событий (наблюдатель) ---- */
+SCREENS.LOG=function(){
+  var ses=sessions();
+  return crumbs([['Стартовый экран','start'],['Журнал событий']])+
+   '<div class="spread" style="margin-bottom:24px"><div><div class="kicker">Модуль фиксации событий</div><h1 class="t">Журнал событий</h1></div><div class="row"><span class="kicker" id="dbstate">'+(DB?'База страницы подключена: логи сеансов сохраняются автоматически':'База страницы недоступна: логи хранятся в этом браузере')+'</span></div></div>'+
+   '<div class="grid"><div class="panel accent c12"><h3 class="t">Сеансы тестирования</h3>'+
+   (ses.length?'<table class="list"><thead><tr><th>Сеанс</th><th>Испытуемый</th><th class="hm">Опыт / ПК</th><th>Заданий</th><th>Выполнено</th><th>Общее время, с</th><th>Событий</th></tr></thead><tbody>'+ses.map(function(s){return '<tr><td class="num">'+esc(s.sid)+'</td><td>'+esc(s.actor)+'</td><td class="hm">'+esc(s.exp)+' / '+esc(s.pc)+'</td><td class="num">'+s.tasks+'</td><td class="num">'+s.ok+'</td><td class="num">'+s.time.toFixed(1).replace('.',',')+'</td><td class="num">'+s.n+'</td></tr>'}).join('')+'</tbody></table>':'<p class="s">Сеансов пока нет.</p>')+
+   '<div class="row mt"><b style="font-size:14px">Выгрузить лог-файл:</b><button class="btn sm" data-act="exp" data-fmt="csv">CSV</button><button class="btn sm" data-act="exp" data-fmt="jsonl">JSONL</button><button class="btn sm" data-act="exp" data-fmt="txt">PLAIN TEXT</button><button class="btn sm ghost" data-act="log_clear">Очистить журнал</button></div></div>'+
+   '<div class="panel steel c12"><div class="spread"><h3 class="t" style="margin:0">Последние события</h3><span class="kicker">Всего записей: <span id="logcount">'+LOG.all().length+'</span></span></div><div class="logwrap mt"><table class="logtbl"><thead><tr><th>timestamp</th><th>actor_id</th><th>role</th><th>action</th><th>object</th><th>outcome</th><th>task</th><th>screen</th><th>changes / detail</th></tr></thead><tbody id="logbody"></tbody></table></div></div></div>';
+};
+function renderLogTable(){
+  var b=document.getElementById('logbody');if(!b)return;
+  var l=LOG.all().slice(-300).reverse();
+  b.innerHTML=l.map(function(e){var c=e.context||{};return '<tr><td>'+e.timestamp.replace('T',' ').replace('Z','')+'</td><td>'+esc(e.actor_id)+'</td><td>'+esc(e.actor_role)+'</td><td>'+esc(e.action)+'</td><td>'+esc(e.object_type+':'+e.object_id)+'</td><td class="'+(e.outcome!=='success'?'out-f':'')+'">'+esc(e.outcome)+'</td><td>'+esc(c.task_id||'')+'</td><td>'+esc(c.screen||'')+'</td><td class="w">'+esc(e.changes?JSON.stringify(e.changes):(c.detail||c.error||c.value||''))+'</td></tr>'}).join('');
+  var n=document.getElementById('logcount');if(n)n.textContent=LOG.all().length;
+}
+window.__onLog=function(){if(S.screen==='LOG')renderLogTable()};
+function sessions(){
+  var m={},order=[];
+  LOG.all().forEach(function(e){var c=e.context||{};if(!c.session_id||String(c.session_id).indexOf('S')!==0)return;
+    var s=m[c.session_id];if(!s){s=m[c.session_id]={sid:c.session_id,actor:e.actor_id,exp:'',pc:'',tasks:0,ok:0,time:0,n:0,starts:{}};order.push(s)}
+    s.n++;
+    if(e.action==='session_start'){s.actor=e.actor_id;s.exp=(e.changes&&e.changes.experience)||'';s.pc=(e.changes&&e.changes.pc_level)||''}
+    if(e.action==='task_start')s.starts[c.task_id]=Date.parse(e.timestamp);
+    if(e.action==='task_end'){s.tasks++;if(e.outcome==='success')s.ok++;if(s.starts[c.task_id])s.time+=(Date.parse(e.timestamp)-s.starts[c.task_id])/1000}
+  });
+  return order;
+}
+function countSessions(){return sessions().length}
+
+/* =====================================================================
+   ТЕСТОВЫЕ ЗАДАНИЯ (по пользовательским сценариям ЛР2)
+   ===================================================================== */
+var TASKS=[
+ {id:'T1',role:'customer',title:'Создание и публикация закупки',
+  text:'Вы — сотрудник заказчика. Создайте закупку и опубликуйте её.<br><b>Наименование:</b> Поставка канцелярских товаров<br><b>НМЦК:</b> 450000<br><b>Способ:</b> Электронный аукцион<br><b>Окончание подачи заявок:</b> 25.11.2026<br><b>Документ:</b> Техническое задание.pdf<br>Сохраните закупку как черновик, затем опубликуйте её.',
+  short:'Создать и опубликовать «Поставка канцелярских товаров», 450 000 ₽, аукцион, до 25.11.2026, ТЗ',
+  done:function(){return S.D.P.some(function(p){return /канцеляр/i.test(p.name)&&p.stage==='apply'})}},
+ {id:'T2',role:'customer',title:'Просмотр поступивших заявок',
+  text:'Вы — сотрудник заказчика. Откройте закупку № 0301-2026-117 «Услуги по уборке помещений» и перейдите к списку её заявок. Оставьте в списке только заявки со статусом «Подана» и упорядочите их по возрастанию цены. Откройте заявку ООО «ЧистоДом», просмотрите документ «Лицензия.pdf» и вернитесь к списку заявок.',
+  short:'№ 0301-2026-117 → заявки «Подана», по цене → ООО «ЧистоДом» → «Лицензия.pdf» → назад к списку',
+  done:function(){var f=S.f4['0301-2026-117'];return S.flags.t2doc&&S.screen==='F4'&&S.params.pid==='0301-2026-117'&&f&&f.st==='sent'&&f.sort==='price'}},
+ {id:'T3',role:'supplier',title:'Поиск закупки и подача заявки',
+  text:'Вы — представитель ООО «ТехСнаб». Найдите закупку <b>«Поставка ноутбуков для учебных классов»</b>: в списке закупок оставьте этап «Подача заявок» и код ОКПД2 «26.20 Компьютеры и периферия». Подайте заявку:<br><b>Цена:</b> 1150000<br><b>Срок поставки:</b> 20 дней<br><b>Документ:</b> Выписка из ЕГРЮЛ.pdf<br>Отправьте заявку.',
+  short:'Найти «Поставка ноутбуков…» (подача заявок, ОКПД2 26.20) → заявка 1 150 000 ₽, 20 дн., выписка ЕГРЮЛ → отправить',
+  done:function(){return S.D.A.some(function(a){return a.mine&&a.pid==='0405-2026-125'&&a.st==='sent'})}},
+ {id:'T4',role:'supplier',title:'Участие в аукционе',
+  text:'Вы — представитель ООО «ТехСнаб», допущены к аукциону по закупке № 0301-2026-114 «Поставка офисной техники». Перейдите к аукциону и подайте ценовое предложение на <b>один шаг ниже</b> текущего лучшего.',
+  short:'Аукцион № 0301-2026-114 → предложение на один шаг ниже лучшего',
+  done:function(){var au=S.D.auction;return au.myBest!=null&&au.myBest<=au.startBest-au.step}},
+ {id:'T5',role:'commission',title:'Рассмотрение заявок и выбор победителя',
+  text:'Вы — член комиссии. Откройте рассмотрение заявок по закупке № 0301-2026-109 «Ремонт кровли учебного корпуса». Примите решения по нерассмотренным заявкам:<br>• ИП Гарипов Р. Р. — <b>не соответствует</b>, основание: «Нет выписки СРО»;<br>• ООО «Уфа-Ремонт» — <b>соответствует</b>.<br>Сохраните решения, перейдите к итогам и зафиксируйте победителя — участника с наименьшей ценой среди соответствующих заявок.',
+  short:'№ 0301-2026-109: Гарипов — не соответствует («Нет выписки СРО»), Уфа-Ремонт — соответствует → итоги → победитель',
+  done:function(){var p=P('0301-2026-109');return p.stage==='results'&&p.winnerApp==='З-109-01'}},
+ {id:'T6',role:'customer',title:'Завершение закупки и отчёт из архива',
+  text:'Вы — сотрудник заказчика. Завершите закупку № 0301-2026-098 «Программное обеспечение САПР», по которой подведены итоги. Затем найдите её в архиве и сформируйте по ней отчёт.',
+  short:'Завершить № 0301-2026-098 → найти в архиве → сформировать отчёт',
+  done:function(){return S.D.reports.some(function(r){return r.pid==='0301-2026-098'})}}
+];
+
+function sid(){var d=new Date();return 'S'+d.getFullYear()+String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0')+'-'+String(d.getHours()).padStart(2,'0')+String(d.getMinutes()).padStart(2,'0')+String(d.getSeconds()).padStart(2,'0')}
+function login(role,via){
+  S.role=role;LOG.ctx.actor_role=role;
+  if(!S.test)LOG.ctx.actor_id=USERS[role].id;
+  LOG.rec('login','session',LOG.ctx.session_id||'free','success',null,{detail:USERS[role].roleName,value:via||null});
+}
+function resetData(){S.D=seed();S.f2={q:'',stage:'',okpd:'',mine:true};S.f4={};S.f9={q:'',period:''};S.draft=null;S.flags={};S.D.auction.startBest=S.D.auction.best}
+S.flags={};S.D.auction.startBest=S.D.auction.best;
+
+function startTask(i){
+  var t=TASKS[i];S.test.i=i;S.test.goal=false;
+  resetData();
+  LOG.ctx.task_id=t.id;
+  S.role=null;
+  LOG.rec('task_start','task',t.id,'success',null,{detail:t.title});
+  login(t.role,'task');
+  S.test.t0=Date.now();
+  go('F1',{},'task_start');
+}
+function endTask(outcome){
+  var t=TASKS[S.test.i],ok=t.done();
+  var res=outcome==='abandoned'?'abandoned':(ok?'success':'failure');
+  LOG.rec('task_end','task',t.id,res,null,{detail:outcome==='abandoned'?'Испытуемый отказался от выполнения':(ok?'Цель задания достигнута':'Испытуемый завершил задание, цель не достигнута'),duration_s:+((Date.now()-S.test.t0)/1000).toFixed(3)});
+  var evs=LOG.session(LOG.ctx.session_id).filter(function(e){return e.context.task_id===t.id});
+  dbWrite('sessions/'+LOG.ctx.session_id+'/tasks/'+t.id,{session_id:LOG.ctx.session_id,actor_id:LOG.ctx.actor_id,task_id:t.id,outcome:res,events:evs});
+  LOG.ctx.task_id=null;
+  if(S.test.i+1<TASKS.length)showTaskIntro(S.test.i+1);
+  else finishSession();
+}
+function finishSession(){
+  LOG.rec('session_end','session',LOG.ctx.session_id,'success');
+  dbWrite('sessions/'+LOG.ctx.session_id,{session_id:LOG.ctx.session_id,actor_id:LOG.ctx.actor_id,experience:S.test.exp,pc_level:S.test.pc,finished:true,events_total:LOG.session(LOG.ctx.session_id).length,updated:new Date().toISOString()});
+  S.lastSession=LOG.ctx.session_id+' · '+LOG.ctx.actor_id;
+  var mySid=LOG.ctx.session_id;S.lastSid=mySid;
+  S.test=null;S.role=null;LOG.ctx.actor_role='guest';
+  go('END');
+  var s=sessions().filter(function(x){return x.sid===mySid})[0];
+  if(s)document.getElementById('endsum').innerHTML='<p class="s">Выполнено заданий: <b>'+s.ok+' из '+s.tasks+'</b>. Общее время выполнения: <b>'+s.time.toFixed(1).replace('.',',')+' с</b>. Записано событий: '+s.n+'.</p>';
+}
+function showTaskIntro(i){
+  var t=TASKS[i];
+  S.role=null;S.screen='intro';LOG.ctx.screen='intro';
+  document.getElementById('app').innerHTML='<main class="wrap"><section class="start-hero"><div class="kicker" style="color:#9FB0C2">Испытуемый '+esc(LOG.ctx.actor_id)+' · задание '+(i+1)+' из '+TASKS.length+'</div><h1>'+esc(t.title)+'</h1></section><div class="panel accent mt"><div class="kicker">Роль: '+USERS[t.role].roleName+'</div><p style="font-size:17px;line-height:28px;margin:12px 0 24px">'+t.text+'</p><button class="btn" data-act="task_go" data-i="'+i+'">Начать задание</button></div></main>';
+  renderTestbar();
+  LOG.rec('task_intro','task',t.id,'success');
+}
+var tbTimer=null;
+function renderTestbar(){
+  var el=document.getElementById('testbar');clearInterval(tbTimer);
+  if(!S.test||S.screen==='intro'||S.test.i==null){el.innerHTML='';return}
+  var t=TASKS[S.test.i];
+  el.innerHTML='<div class="testbar"><b>'+esc(LOG.ctx.actor_id)+' · задание '+(S.test.i+1)+'/'+TASKS.length+'</b><span class="tb-task" title="'+esc(t.short)+'">'+esc(t.short)+'</span><span class="tb-time" id="tbtime"></span><button class="tb-show" data-act="task_show">Задание</button><button class="tb-done" data-act="task_done">Готово</button><button class="tb-skip" data-act="task_skip">Не могу выполнить</button></div>';
+  function tk(){var e=document.getElementById('tbtime');if(e)e.textContent=Math.floor((Date.now()-S.test.t0)/1000)+' с'}
+  tk();tbTimer=setInterval(tk,1000);
+}
+/* проверка цели после каждого действия: фиксируется момент достижения цели */
+function checkGoal(){
+  if(!S.test||S.test.i==null||S.test.goal)return;
+  var t=TASKS[S.test.i];
+  if(t.done()){S.test.goal=true;LOG.rec('goal_reached','task',t.id,'success',null,{duration_s:+((Date.now()-S.test.t0)/1000).toFixed(3)})}
+}
+
+/* =====================================================================
+   МОДАЛЬНЫЕ ОКНА И УВЕДОМЛЕНИЯ
+   ===================================================================== */
+var modalCb=null;
+function modal(title,body,buttons,wide){
+  modalCb=buttons;
+  document.getElementById('modal').innerHTML='<div class="modal-bg" data-act="m_bg"><div class="modal'+(wide?' wide':'')+'" role="dialog" aria-modal="true"><h3>'+title+'</h3><div class="mbody">'+body+'</div><div class="row">'+buttons.map(function(b,i){return '<button class="btn '+(b.cls||'')+'" data-act="m_btn" data-i="'+i+'">'+b.label+'</button>'}).join('')+'</div></div></div>';
+}
+function closeModal(){document.getElementById('modal').innerHTML='';modalCb=null}
+var toastT=null;
+function toast(msg,bad){var el=document.getElementById('toast');el.innerHTML='<div class="toast'+(bad?' bad':'')+'">'+msg+'</div>';clearTimeout(toastT);toastT=setTimeout(function(){el.innerHTML=''},3500)}
+function confirmBox(title,text,okLabel,obj,onOk){
+  LOG.rec('confirm_open','dialog',obj,'success',null,{detail:title});
+  modal(title,'<p>'+text+'</p>',[{label:'Отмена',cls:'ghost',fn:function(){LOG.rec('confirm_cancel','dialog',obj,'cancelled');closeModal()}},{label:okLabel,fn:function(){LOG.rec('confirm_ok','dialog',obj);closeModal();onOk()}}]);
+}
+function filePicker(list,obj,onPick){
+  LOG.rec('file_dialog_open','dialog',obj);
+  modal('Выбор файла','<p class="s">Документы на компьютере:</p><ul class="files picker">'+list.map(function(f,i){return '<li data-act="m_pick" data-i="'+i+'"><span>'+I('doc')+esc(f)+'</span><span class="kicker">'+(120+i*37)+' КБ</span></li>'}).join('')+'</ul>',[{label:'Отмена',cls:'ghost',fn:function(){LOG.rec('file_dialog_cancel','dialog',obj,'cancelled');closeModal()}}]);
+  modalCb.pick=function(i){closeModal();onPick(list[i])};
+}
+function docViewer(name){
+  LOG.rec('document_view','document',name);
+  if(name==='Лицензия.pdf')S.flags.t2doc=true;
+  modal(esc(name),'<div class="doc"><p style="text-align:center"><b>'+esc(name.replace(/\.\w+$/,'').toUpperCase())+'</b></p><p>Учебный документ для прототипа. Содержимое условное.</p><p>Документ подписан усиленной квалифицированной электронной подписью. Дата подписания: 10.11.2026.</p><p>Сведения о подписанте: уполномоченное лицо организации.</p></div>',[{label:'Закрыть',fn:function(){LOG.rec('document_close','document',name);closeModal();checkGoal()}}],true);
+}
+
+/* =====================================================================
+   ДЕЙСТВИЯ
+   ===================================================================== */
+var ACT={};
+ACT.test_reg=function(){go('reg')};
+ACT.free=function(el){S.test=null;LOG.ctx.session_id='F'+sid().slice(1);LOG.ctx.actor_id='free';LOG.ctx.task_id=null;resetData();login(el.dataset.role,'free');go('F1')};
+ACT.test_begin=function(){
+  var code=document.getElementById('r_code').value.trim()||('И-'+(countSessions()+1)),pc=document.getElementById('r_pc').value,exp=document.getElementById('r_exp').value;
+  if(!pc||!exp){toast('Укажите уровень владения ПК и опыт работы с порталами',true);return}
+  LOG.ctx.session_id=sid();LOG.ctx.actor_id=code;LOG.ctx.actor_role='participant';LOG.ctx.task_id=null;
+  S.test={i:null,pc:pc,exp:exp};
+  LOG.rec('session_start','session',LOG.ctx.session_id,'success',{experience:exp,pc_level:pc},{detail:'Регистрация испытуемого'});
+  dbWrite('sessions/'+LOG.ctx.session_id,{session_id:LOG.ctx.session_id,actor_id:code,experience:exp,pc_level:pc,started:new Date().toISOString(),finished:false});
+  showTaskIntro(0);
+};
+ACT.task_go=function(el){startTask(+el.dataset.i)};
+ACT.task_show=function(){var t=TASKS[S.test.i];LOG.rec('task_hint_open','task',t.id);modal('Задание '+(S.test.i+1)+': '+esc(t.title),'<p>'+t.text+'</p>',[{label:'Продолжить',fn:function(){LOG.rec('task_hint_close','task',t.id);closeModal()}}])};
+ACT.task_done=function(){
+  var t=TASKS[S.test.i];
+  if(!t.done()){
+    LOG.rec('task_done_click','task',t.id,'failure',null,{error:'goal_not_reached'});
+    modal('Задание ещё не выполнено','<p>Система не видит результата задания. Проверьте, все ли шаги выполнены.</p>',[{label:'Продолжить выполнение',fn:function(){LOG.rec('task_continue','task',t.id);closeModal()}},{label:'Всё равно завершить',cls:'ghost',fn:function(){closeModal();endTask('done')}}]);
+    return;
+  }
+  LOG.rec('task_done_click','task',t.id);endTask('done');
+};
+ACT.task_skip=function(){var t=TASKS[S.test.i];confirmBox('Пропустить задание?','Задание будет отмечено как невыполненное.','Пропустить','task:'+t.id,function(){endTask('abandoned')})};
+ACT.logout=function(){LOG.rec('logout','session',LOG.ctx.session_id||'');if(S.test){toast('Во время теста выход не нужен — нажмите «Готово» в полосе сверху',true);return}S.role=null;go('start')};
+ACT.notif=function(){LOG.rec('notifications_open','notifications','');modal('Уведомления','<ul class="feed"><li>Новые события отображаются на главной странице.<small>сегодня</small></li></ul>',[{label:'Закрыть',fn:closeModal}])};
+ACT.quick=function(el){
+  var q=el.dataset.q;LOG.rec('quick_command','command',q);
+  ({create:ACT.create,apps:function(){go('F4',{},'quick')},report:function(){go('F11',{},'quick')},search:function(){go('F2',{},'quick')},auc:function(){go('F6',{},'quick')},arch:function(){go('F9',{},'quick')},rev:function(){go('F7',{},'quick')}}[q])();
+};
+/* закупки */
+ACT.create=function(){LOG.rec('purchase_form_open','purchase','new');S.draft={name:'',nmck:'',method:'',deadline:'',okpd:'',req:'',docs:[]};go('F2N',{},'create')};
+ACT.f2mine=function(el){S.f2.mine=el.dataset.v==='1';LOG.rec('filter_apply','purchase_list','',  'success',{scope:{old:!S.f2.mine?'mine':'all',new:S.f2.mine?'mine':'all'}});render()};
+ACT.f2reset=function(){LOG.rec('filter_reset','purchase_list','');S.f2.q='';S.f2.stage='';S.f2.okpd='';render()};
+ACT.p_tab=function(el){LOG.rec('tab_open','purchase',S.params.id,'success',null,{detail:el.dataset.tab});S.params.tab=el.dataset.tab;render()};
+ACT.p_attach=function(){filePicker(FILES_PURCH,'purchase:'+(S.draft.id||'new'),function(f){if(S.draft.docs.indexOf(f)<0)S.draft.docs.push(f);LOG.rec('file_attach','purchase_document',f,'success',{docs:{old:S.draft.docs.length-1,new:S.draft.docs.length}});delete (S.draft.errors||{}).docs;render()})};
+ACT.p_unattach=function(el){var f=el.dataset.f;S.draft.docs=S.draft.docs.filter(function(x){return x!==f});LOG.rec('file_remove','purchase_document',f);render()};
+ACT.p_cancel=function(){LOG.rec('purchase_form_cancel','purchase',S.draft.id||'new','cancelled');var id=S.draft.id;S.draft=null;id?go('F3',{id:id}):go('F2')};
+ACT.p_save=function(){
+  syncDraft();var d=S.draft,e={};
+  if(!d.name.trim())e.name='Укажите наименование';
+  var n=parseMoney(d.nmck);if(!(n>0))e.nmck='Укажите цену числом, например 450000';
+  if(!d.method)e.method='Выберите способ';
+  var dt=parseDate(d.deadline);if(!dt)e.deadline='Дата в формате дд.мм.гггг';else if(dt<=parseDate(TODAY))e.deadline='Дата должна быть позже '+TODAY;
+  d.errors=e;
+  if(Object.keys(e).length){LOG.rec('purchase_save','purchase',d.id||'new','failure',null,{error:'validation',detail:Object.keys(e).join(',')});render();var f=document.querySelector('.fld.err input,.fld.err select');if(f)f.focus();return}
+  var p;
+  if(d.id){p=P(d.id)}else{p={id:'0301-2026-'+(S.D.seq++),org:ORG,stage:'draft',history:[{t:TODAY,who:U().name,what:'Закупка создана'}]};S.D.P.unshift(p)}
+  p.name=d.name.trim();p.nmck=n;p.method=d.method;p.deadline=d.deadline.trim();p.okpd=d.okpd;p.req=d.req;p.docs=d.docs.slice();
+  hist(p,'Черновик сохранён');
+  LOG.rec('purchase_save_draft','purchase',p.id,'success',{name:{old:'',new:p.name},nmck:{old:'',new:p.nmck},method:{old:'',new:p.method},deadline:{old:'',new:p.deadline},docs:{old:0,new:p.docs.length}});
+  S.draft=null;toast('Черновик закупки № '+p.id+' сохранён');go('F3',{id:p.id},'save');
+};
+function syncDraft(){if(!S.draft)return;['name','nmck','method','deadline','okpd','req'].forEach(function(k){var el=document.getElementById('p_'+k);if(el)S.draft[k]=el.value})}
+ACT.p_edit=function(){var p=P(S.params.id);LOG.rec('purchase_edit_open','purchase',p.id);S.draft={id:p.id,name:p.name,nmck:p.nmck,method:p.method,deadline:p.deadline,okpd:p.okpd,req:p.req||'',docs:p.docs.slice()};go('F2N',{},'edit')};
+ACT.p_publish=function(){
+  var p=P(S.params.id);
+  if(!p.docs.length){LOG.rec('purchase_publish','purchase',p.id,'failure',null,{error:'no_documents'});modal('Нельзя опубликовать','<p>К закупке не прикреплено ни одного документа. Откройте «Редактировать» и прикрепите техническое задание.</p>',[{label:'Понятно',fn:closeModal}]);return}
+  if(!p.deadline||!parseDate(p.deadline)){LOG.rec('purchase_publish','purchase',p.id,'failure',null,{error:'no_deadline'});modal('Нельзя опубликовать','<p>Не указан срок окончания подачи заявок.</p>',[{label:'Понятно',fn:closeModal}]);return}
+  confirmBox('Опубликовать закупку?','Закупка № '+p.id+' «'+esc(p.name)+'» станет доступна участникам. После публикации изменить условия можно только через внесение изменений.','Опубликовать','purchase:'+p.id,function(){
+    p.stage='apply';hist(p,'Закупка опубликована');
+    LOG.rec('purchase_publish','purchase',p.id,'success',{stage:{old:'draft',new:'apply'}});
+    toast('Закупка № '+p.id+' опубликована');render();checkGoal();
+  });
+};
+ACT.p_apps=function(){LOG.rec('applications_open','purchase',S.params.id);go('F4',{pid:S.params.id},'card')};
+ACT.p_complete=function(){
+  var p=P(S.params.id);
+  confirmBox('Завершить закупку?','Закупке № '+p.id+' будет присвоен итоговый статус. Данные станут доступны только для просмотра, закупка вместе с заявками и документами будет переведена в архив.','Завершить','purchase:'+p.id,function(){
+    p.stage='done';p.archived=true;p.closed=TODAY;hist(p,'Закупка завершена и переведена в архив');
+    LOG.rec('purchase_complete','purchase',p.id,'success',{stage:{old:'results',new:'done'},archived:{old:false,new:true}});
+    toast('Закупка № '+p.id+' завершена и переведена в архив');go('F9',{},'complete');
+  });
+};
+/* заявки */
+ACT.f4back=function(){var a=A(S.params.id);LOG.rec('back_to_list','application',a.id);go('F4',{pid:S.role==='supplier'?'':S.lastF4pid||''},'back')};
+ACT.a_new=function(){
+  var p=P(S.params.id);
+  var a={id:'З-'+p.id.split('-')[2]+'-'+String(Math.floor(10+Math.random()*80)),pid:p.id,sup:'ООО «ТехСнаб»',inn:'0278112233',price:null,term:'',date:'',st:'draft',docs:[],addr:'г. Уфа, ул. Кирова, 52',contact:'Сидоров И. П.',mine:true};
+  S.D.A.push(a);LOG.rec('application_create','application',a.id,'success',null,{detail:'Черновик заявки по закупке '+p.id});
+  go('F5N',{id:a.id},'apply');
+};
+function syncApp(a){var pr=document.getElementById('a_price'),te=document.getElementById('a_term'),co=document.getElementById('a_contact');if(pr)a.price=parseMoney(pr.value)||null;if(te)a.term=parseMoney(te.value)||'';if(co)a.contact=co.value}
+ACT.a_attach=function(){var a=A(S.params.id);syncApp(a);filePicker(FILES_APP,'application:'+a.id,function(f){if(a.docs.indexOf(f)<0)a.docs.push(f);LOG.rec('file_attach','application_document',f,'success',{docs:{old:a.docs.length-1,new:a.docs.length}});if(a.errors)delete a.errors.docs;render()})};
+ACT.a_unattach=function(el){var a=A(S.params.id);a.docs=a.docs.filter(function(x){return x!==el.dataset.f});LOG.rec('file_remove','application_document',el.dataset.f);render()};
+ACT.a_savedraft=function(){var a=A(S.params.id);syncApp(a);LOG.rec('application_save_draft','application',a.id);toast('Черновик заявки сохранён');go('F4',{hl:a.id},'save')};
+ACT.a_send=function(){
+  var a=A(S.params.id),p=P(a.pid);syncApp(a);var e={};
+  if(!a.price)e.price='Укажите цену числом';else if(a.price>p.nmck)e.price='Цена не может превышать НМЦК ('+money(p.nmck)+' ₽)';
+  if(!a.term)e.term='Укажите срок поставки';
+  if(!a.contact)e.contact='Укажите контактное лицо';
+  if(a.docs.indexOf('Выписка из ЕГРЮЛ.pdf')<0)e.docs='Прикрепите выписку из ЕГРЮЛ';
+  a.errors=e;
+  if(Object.keys(e).length){LOG.rec('application_send','application',a.id,'failure',null,{error:'validation',detail:Object.keys(e).join(',')});render();return}
+  confirmBox('Отправить заявку?','Заявка на участие в закупке № '+p.id+' с ценой '+money(a.price)+' ₽ будет подписана электронной подписью и направлена заказчику.','Отправить','application:'+a.id,function(){
+    a.st='sent';a.date=TODAY;
+    LOG.rec('application_send','application',a.id,'success',{status:{old:'draft',new:'sent'},price:{old:null,new:a.price}});
+    toast('Заявка принята. Статус: «Подана»');go('F4',{hl:a.id},'sent');checkGoal();
+  });
+};
+/* аукцион */
+ACT.bid_step=function(){var au=S.D.auction,el=document.getElementById('bid');el.value=money(au.best-au.step);LOG.rec('bid_step_click','auction',au.pid,'success',{bid:{old:'',new:au.best-au.step}})};
+ACT.bid_send=function(){
+  var au=S.D.auction,v=parseMoney(document.getElementById('bid').value);
+  if(!v){LOG.rec('bid_submit','auction',au.pid,'failure',null,{error:'empty'});toast('Введите цену предложения',true);return}
+  if(v>au.best-au.step){LOG.rec('bid_submit','auction',au.pid,'failure',null,{error:'not_lower_by_step',value:v});toast('Предложение должно быть ниже лучшего хотя бы на шаг ('+money(au.step)+' ₽)',true);return}
+  if(v<au.best-au.step*20){LOG.rec('bid_submit','auction',au.pid,'failure',null,{error:'too_low',value:v});toast('Слишком большое снижение за один шаг',true);return}
+  confirmBox('Подать ценовое предложение?','Ваше предложение: <b>'+money(v)+' ₽</b>. Отозвать предложение после подачи нельзя.','Подать','auction:'+au.pid,function(){
+    var d=new Date();au.bids.push({t:String(d.getHours()).padStart(2,'0')+':'+String(d.getMinutes()).padStart(2,'0')+':'+String(d.getSeconds()).padStart(2,'0'),who:'Участник 3 (вы)',price:v});
+    var old=au.best;au.best=v;au.myBest=v;
+    LOG.rec('bid_submit','auction',au.pid,'success',{best_price:{old:old,new:v}});
+    toast('Предложение '+money(v)+' ₽ зарегистрировано');render();checkGoal();
+  });
+};
+/* рассмотрение */
+ACT.r_compare=function(){var p=P(S.params.id),ap=S.D.A.filter(function(a){return a.pid===p.id});LOG.rec('applications_compare','purchase',p.id,'success',null,{value:ap.length});modal('Сравнение заявок','<table class="list"><thead><tr><th>Участник</th><th>Цена, ₽</th><th>Срок, дн.</th><th>Документов</th></tr></thead><tbody>'+ap.slice().sort(function(a,b){return a.price-b.price}).map(function(a){return '<tr><td>'+esc(a.sup)+'</td><td class="num">'+money(a.price)+'</td><td class="num">'+a.term+'</td><td class="num">'+a.docs.length+'</td></tr>'}).join('')+'</tbody></table>',[{label:'Закрыть',fn:function(){LOG.rec('compare_close','purchase',p.id);closeModal()}}],true)};
+ACT.r_save=function(){
+  var p=P(S.params.id),ap=S.D.A.filter(function(a){return a.pid===p.id});
+  var und=ap.filter(function(a){return !a.decision}),noReason=ap.filter(function(a){return a.decision==='no'&&!String(a.reason||'').trim()});
+  if(und.length||noReason.length){var msg=und.length?'Не приняты решения по заявкам: '+und.map(function(a){return a.sup}).join(', ')+'.':'Укажите основание отклонения для: '+noReason.map(function(a){return a.sup}).join(', ')+'.';LOG.rec('review_save','purchase',p.id,'failure',null,{error:und.length?'undecided':'no_reason',detail:msg});S.params.err=msg;render();return}
+  p.reviewSaved=true;S.params.err='';hist(p,'Результаты рассмотрения зафиксированы');
+  LOG.rec('review_save','purchase',p.id,'success',{decisions:{old:null,new:ap.map(function(a){return a.id+':'+a.decision}).join(';')}});
+  toast('Решения сохранены');render();
+};
+ACT.r_results=function(){LOG.rec('results_open','purchase',S.params.id);go('F8',{id:S.params.id},'review')};
+ACT.w_fix=function(){
+  var p=P(S.params.id),r=document.querySelector('[data-win]:checked');
+  if(!r){LOG.rec('winner_fix','purchase',p.id,'failure',null,{error:'not_selected'});toast('Выберите победителя',true);return}
+  var a=A(r.value);
+  confirmBox('Зафиксировать победителя?','Победителем закупки № '+p.id+' будет признан <b>'+esc(a.sup)+'</b> с ценой '+money(a.price)+' ₽. Действие записывается в историю и не может быть отменено.','Зафиксировать','purchase:'+p.id,function(){
+    p.stage='results';p.winner=a.sup;p.winPrice=a.price;p.winnerApp=a.id;hist(p,'Победитель зафиксирован: '+a.sup);
+    var best=S.D.A.filter(function(x){return x.pid===p.id&&x.decision==='ok'}).sort(function(x,y){return x.price-y.price})[0];
+    LOG.rec('winner_fix','purchase',p.id,'success',{winner:{old:null,new:a.id}},{detail:a.id===best.id?'Выбран участник с наименьшей ценой':'Выбран не лучший по цене участник'});
+    toast('Победитель зафиксирован');render();checkGoal();
+  });
+};
+/* архив, отчёты */
+ACT.rep_arch=function(){var p=P(S.params.id);var t=new Date().toLocaleTimeString('ru-RU');S.D.reports.push({pid:p.id,t:TODAY+' '+t});LOG.rec('report_generate','report',p.id,'success',null,{detail:'Итоги закупки'});toast('Отчёт сформирован');checkGoal();go('F11',{},'archive')};
+ACT.rep_make=function(){var ty=document.getElementById('rep_type').value,pe=document.getElementById('rep_period').value;S.D.reports.push({type:ty,period:pe,t:TODAY+' '+new Date().toLocaleTimeString('ru-RU')});LOG.rec('report_generate','report',ty,'success',null,{detail:pe});render()};
+ACT.doc_view=function(el){docViewer(el.dataset.f)};
+/* журнал */
+ACT.exp=function(el){
+  var f=el.dataset.fmt,list=LOG.all(),data=f==='csv'?LOG.toCSV(list):f==='jsonl'?LOG.toJSONL(list):LOG.toTXT(list);
+  var name='lr5_log_'+new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')+'.'+(f==='txt'?'log':f);
+  download(name,data,f==='csv'?'text/csv':f==='jsonl'?'application/x-ndjson':'text/plain');
+};
+ACT.exp_session=function(el){
+  var f=el.dataset.fmt,sidv=S.lastSid,list=LOG.session(sidv),data=f==='csv'?LOG.toCSV(list):f==='jsonl'?LOG.toJSONL(list):LOG.toTXT(list);
+  var who=(list[0]&&list[0].actor_id||'user').replace(/И/g,'I').replace(/[^A-Za-z0-9-]/g,'')||'user';
+  download('lr5_log_'+who+'_'+sidv+'.'+(f==='txt'?'log':f),data,f==='csv'?'text/csv':f==='jsonl'?'application/x-ndjson':'text/plain');
+};
+ACT.log_clear=function(){confirmBox('Очистить журнал?','Все записи журнала в этом браузере будут удалены. Перед очисткой выгрузите лог-файл.','Очистить','log',function(){LOG.clear();render()})};
+var DL=null;
+function download(name,data,mime){
+  function anchor(){var b=new Blob(['﻿'+data],{type:mime+';charset=utf-8'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},500)}
+  if(window.claude&&typeof window.claude.use==='function'){
+    window.claude.use('downloads').then(function(d){if(d)return d.save({filename:name,data:data}).then(function(){toast('Файл '+name+' сохранён')},function(){toast('Сохранение отменено',true)});anchor()}).catch(anchor);
+  }else anchor();
+}
+ACT.m_btn=function(el){var b=modalCb&&modalCb[+el.dataset.i];if(b&&b.fn)b.fn()};
+ACT.m_pick=function(el){if(modalCb&&modalCb.pick)modalCb.pick(+el.dataset.i)};
+ACT.m_bg=function(el,ev){};
+
+/* =====================================================================
+   ОБРАБОТКА СОБЫТИЙ ИНТЕРФЕЙСА
+   ===================================================================== */
+document.addEventListener('click',function(ev){
+  var t=ev.target;
+  if(t.id==='fab'){LOG.rec('nav_click','screen','LOG');S.role=S.test?S.role:S.role;go('LOG',{},'fab');return}
+  var m=t.closest('[data-menu]');
+  if(m){ev.preventDefault();var it=MENU.filter(function(x){return x.k===m.dataset.menu})[0];var acc=it.acc[S.role];
+    if(acc==='-'){LOG.rec('menu_select','menu',it.k,'failure',null,{error:'access_denied',detail:it.label});toast('Раздел «'+it.label+'» недоступен для вашей роли',true);return}
+    LOG.rec('menu_select','menu',it.k,'success',null,{detail:it.label});
+    if(it.k==='apps')S.lastF4pid='';
+    go(it.sc,{},'menu');return}
+  var a=t.closest('[data-act]');
+  if(a&&a.dataset.act!=='m_bg'){ev.preventDefault();var fn=ACT[a.dataset.act];if(fn)fn(a,ev);return}
+  var g=t.closest('[data-go]');
+  if(g){ev.preventDefault();var sc=g.dataset.go,id=g.dataset.id;
+    if(sc==='F4back'){ACT.f4back();return}
+    if(sc==='F4'&&id){S.lastF4pid=id}
+    LOG.rec('link_click','screen',sc,'success',null,{detail:id||''});
+    var params=id?(sc==='F4'?{pid:id}:{id:id}):{};
+    if(sc==='F3'&&id&&S.screen==='F4')S.lastF4pid=S.params.pid||'';
+    if(sc==='F5'&&S.screen==='F4')S.lastF4pid=S.params.pid||'';
+    go(sc,params,'link');return}
+});
+document.addEventListener('submit',function(ev){
+  ev.preventDefault();var f=ev.target;
+  if(f.id==='hsearch'){var q=document.getElementById('hq').value.trim();LOG.rec('search','purchase_list','header','success',{query:{old:S.f2.q,new:q}});S.f2.q=q;S.f2.stage='';S.f2.okpd='';S.f2.mine=false;go('F2',{},'header_search');return}
+  if(f.id==='f2form'){var q2=document.getElementById('f2q').value.trim();LOG.rec('search','purchase_list','filters','success',{query:{old:S.f2.q,new:q2}},{value:{stage:S.f2.stage,okpd:S.f2.okpd}});S.f2.q=q2;render();checkGoal();return}
+  if(f.id==='f9form'){var q3=document.getElementById('f9q').value.trim();LOG.rec('archive_search','archive','', 'success',{query:{old:S.f9.q,new:q3}});S.f9.q=q3;render();return}
+});
+document.addEventListener('change',function(ev){
+  var t=ev.target;
+  if(t.dataset.field&&S.draft){var k=t.dataset.field,old=S.draft[k];S.draft[k]=t.value;if(S.draft.errors)delete S.draft.errors[k];LOG.rec('field_change','purchase_form',k,'success',(function(){var o={};o[k]={old:old,new:t.value};return o})());return}
+  if(t.dataset.afield){var a=A(S.params.id),k2=t.dataset.afield,o2=a[k2],nv=k2==='contact'?t.value:(parseMoney(t.value)||'');a[k2]=nv;LOG.rec('field_change','application_form',k2,'success',(function(){var o={};o[k2]={old:o2,new:nv};return o})());return}
+  if(t.dataset.filter){var k3=t.dataset.filter,o3=S.f2[k3];S.f2[k3]=t.value;var q=document.getElementById('f2q');if(q)S.f2.q=q.value.trim();LOG.rec('filter_apply','purchase_list',k3,'success',(function(){var o={};o[k3]={old:o3,new:t.value};return o})());render();checkGoal();return}
+  if(t.dataset.f4){var key=S.params.pid||'all',f=S.f4[key],k4=t.dataset.f4,o4=f[k4];f[k4]=t.value;LOG.rec('filter_apply','application_list',k4,'success',(function(){var o={};o[k4]={old:o4,new:t.value};return o})(),{detail:key});render();checkGoal();return}
+  if(t.dataset.dec){var ap=A(t.dataset.dec),o5=ap.decision;ap.decision=t.value;P(ap.pid).reviewSaved=false;LOG.rec('decision_set','application',ap.id,'success',{decision:{old:o5||'',new:t.value}});render();if(t.value==='no'){var r=document.querySelector('[data-reason="'+ap.id+'"]');if(r)r.focus()}return}
+  if(t.dataset.reason){var ar=A(t.dataset.reason),o6=ar.reason;ar.reason=t.value;P(ar.pid).reviewSaved=false;LOG.rec('field_change','review',ar.id,'success',{reason:{old:o6||'',new:t.value}});return}
+  if(t.dataset.win){LOG.rec('winner_select','application',t.value);return}
+  if(t.dataset.qc){var k7=t.dataset.qc,on=t.checked;var qq=S.settings.quick;if(on&&qq.indexOf(k7)<0)qq.push(k7);if(!on)S.settings.quick=qq.filter(function(x){return x!==k7});LOG.rec('settings_change','quick_panel',k7,'success',{enabled:{old:!on,new:on}});return}
+  if(t.id==='bid'){LOG.rec('field_change','auction','bid','success',{bid:{old:'',new:parseMoney(t.value)||t.value}});return}
+  if(t.id==='rep_type'||t.id==='rep_period'){LOG.rec('field_change','report',t.id,'success',{value:{old:'',new:t.value}});return}
+});
+document.addEventListener('keydown',function(ev){
+  if(ev.key==='Escape'&&modalCb){var c=modalCb.filter?modalCb.filter(function(b){return b.cls==='ghost'})[0]:null;LOG.rec('key_escape','dialog','');if(c&&c.fn)c.fn();else closeModal();return}
+  if(!S.role||!ev.altKey)return;
+  var map={h:'home',n:'create',f:'search',2:'apps',3:'rev',4:'auc',6:'arch',r:'report'},k=map[ev.key.toLowerCase()]||map[ev.code&&ev.code.replace('Key','').replace('Digit','').toLowerCase()];
+  if(!k)return;ev.preventDefault();
+  LOG.rec('hotkey','command',k,'success',null,{detail:'Alt+'+ev.key});
+  if(k==='home')return go('F1',{},'hotkey');
+  if(k==='create'){if(S.role==='customer')ACT.create();else toast('Команда недоступна для вашей роли',true);return}
+  var it=MENU.filter(function(x){return x.k===({search:'purch',apps:'apps',rev:'rev',auc:'auc',arch:'arch',report:'rep'})[k]})[0];
+  if(it.acc[S.role]==='-'){LOG.rec('menu_select','menu',it.k,'failure',null,{error:'access_denied'});toast('Раздел недоступен для вашей роли',true);return}
+  go(it.sc,{},'hotkey');
+});
+window.addEventListener('beforeunload',function(){if(S.test)LOG.rec('page_unload','session',LOG.ctx.session_id,'interrupted')});
+
+/* запуск */
+LOG.ctx.screen='start';
+LOG.rec('app_open','application','prototype','success',null,{detail:location.search||''});
+render();
+window.__dbReady=function(){var e=document.getElementById('dbstate');if(e)e.textContent='База страницы подключена: логи сеансов сохраняются автоматически'};
+/* служебный доступ для автоматической проверки */
+window.__LR5={S:S,LOG:LOG,TASKS:TASKS,go:go};
+})();
+</script>
+</body>
+</html>
