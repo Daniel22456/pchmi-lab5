@@ -146,7 +146,7 @@ KV = re.compile(r'(\S+?)=("(?:[^"\\]|\\.)*"|\S+)')
 def read_txt(path):
     out = []
     for line in Path(path).read_text(encoding="utf-8-sig").splitlines():
-        if not line.strip():
+        if not re.match(r"\d{4}-\d{2}-\d{2}T", line):   # не запись журнала (например, README.txt)
             continue
         stamp, rest = line.split(None, 1)
         kv = {}
@@ -304,9 +304,9 @@ def report(res, out_dir=None):
             for i, s in enumerate(people):
                 ys = [s["tasks"][t]["time"] if t in s["tasks"] and s["tasks"][t]["outcome"] == "success" else None for t in tids]
                 ax.scatter([j + 0.2 for j, y in enumerate(ys) if y is not None], [y for y in ys if y is not None],
-                           s=14, color="#142233", zorder=3, label="Отдельные испытуемые" if i == 0 else None)
+                           s=14, color="#142233", zorder=3, label="Отдельные сеансы" if i == 0 else None)
             ax.set_xticks(list(x)); ax.set_xticklabels(tids); ax.set_ylabel("Время, с")
-            ax.set_title("Время выполнения заданий: оценка GOMS и результаты тестирования")
+            ax.set_title("Время выполнения заданий: оценка GOMS и фактическое время")
             ax.grid(axis="y", alpha=.3); ax.legend(frameon=False)
             fig.tight_layout(); fig.savefig(out / "times.png"); plt.close(fig)
         except ImportError:
