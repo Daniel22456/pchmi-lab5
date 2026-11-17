@@ -192,6 +192,24 @@ def match(e, spec):
     return (e["action"] == action and (oid is None or e["oid"] == oid)
             and (detail is None or detail in e["detail"]) and (outcome is None or e["outcome"] == outcome))
 
+def derive_goal_T2(te):
+    """Цель T2 по фактическим действиям: статус «Подана», сортировка по цене,
+    просмотрен «Лицензия.pdf», возврат к списку заявок. Нужна для логов,
+    записанных до исправления проверки цели в прототипе (общий список заявок
+    через меню «Заявки» прототип ошибочно не засчитывал)."""
+    st = sort = None; doc = False
+    for e in te:
+        if e["action"] == "filter_apply" and e["oid"] == "st":
+            st = (e["changes"].get("st") or {}).get("new")
+        if e["action"] == "filter_apply" and e["oid"] == "sort":
+            sort = (e["changes"].get("sort") or {}).get("new")
+        if e["action"] == "document_view" and e["oid"] == "Лицензия.pdf":
+            doc = True
+        if e["action"] == "back_to_list" and doc and st == "sent" and sort == "price":
+            return e["t"]
+    return None
+
+
 def analyze(events, include_service=False, exclude=()):
     sessions = defaultdict(list)
     for e in events:
@@ -213,6 +231,11 @@ def analyze(events, include_service=False, exclude=()):
             if t0 is None or end is None:
                 continue
             goal = next((e["t"] for e in te if e["action"] == "goal_reached"), None)
+            outcome, derived = end["outcome"], False
+            if goal is None and tid == "T2":
+                goal = derive_goal_T2(te)
+                if goal is not None:
+                    outcome, derived = "success", True
             t_fin = goal if goal is not None else end["t"]
             found = []
             for i, (_, _, spec) in enumerate(task["steps"]):
@@ -225,7 +248,7 @@ def analyze(events, include_service=False, exclude=()):
             for hit, i in found:
                 steps[i] = round(hit - prev, 3); prev = hit
             info["tasks"][tid] = dict(
-                outcome=end["outcome"], time=round(t_fin - t0, 3), time_to_done_click=round(end["t"] - t0, 3),
+                outcome=outcome, derived=derived, time=round(t_fin - t0, 3), time_to_done_click=round(end["t"] - t0, 3),
                 steps=steps,
                 errors=sum(1 for e in te if e["outcome"] == "failure" and e["action"] not in ("task_end",)),
                 hints=sum(1 for e in te if e["action"] == "task_hint_open"),
