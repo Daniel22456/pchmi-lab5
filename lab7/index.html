@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ЛР7 · Полигон измерения метрик UI · Сопровождение закупок</title>
+<link rel="preload" href="fonts/ibm-plex-sans-cyrillic-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/metrics.js"></script>
+</head>
+<body>
+<header class="hdr">
+  <div class="hdr-in">
+    <div class="mark">СЗ</div>
+    <div><div class="brand-name">Сопровождение закупок</div><div class="brand-sub">Полигон ЛР7 · СДР · ИВТ-ПО-302Б</div></div>
+    <div class="hdr-sp"></div>
+    <button class="btn btn-sm btn-ghost" style="color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.5)" id="btnPanel">Метрики</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <!-- 1. Текст + изображение (кандидат LCP) -->
+  <section class="panel span-12" id="secText">
+    <h1 class="h1">Рабочий стол заказчика</h1>
+    <p class="lead">Страница-полигон для измерения метрик производительности рендеринга, интерактивности и ресурсной стоимости интерфейса информационной системы сопровождения государственных закупок.</p>
+    <p class="txt">Заказчик размещает извещения о закупках, принимает и рассматривает заявки участников, подводит итоги и заключает контракты. На полигоне собраны типовые элементы рабочих экранов: <span class="tip" tabindex="0">карточки закупок<span class="tip-box">Карточка показывает номер извещения, предмет закупки, НМЦК и срок окончания подачи заявок.</span></span>, доска рассмотрения заявок с перетаскиванием, карусель лотов со свайпом и прокручиваемый реестр извещений. Наведите курсор на подчёркнутые термины — например, <span class="tip" tabindex="0">НМЦК<span class="tip-box">Начальная (максимальная) цена контракта — предельная цена, с которой начинается закупка.</span></span>.</p>
+    <img class="hero" id="hero" src="img/hero.png" width="1200" height="440" alt="Диаграмма закупочной активности заказчика по месяцам 2026 года: извещения, контракты и конкурентные процедуры">
+  </section>
+
+  <!-- 2. Анимированные карточки (click / hover) -->
+  <section class="span-12">
+    <h2 class="h2">Активные закупки</h2>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <!-- 3. Drag-зона -->
+  <section class="panel panel-steel span-8" id="secBoard">
+    <h3 class="h3">Рассмотрение заявок (перетаскивание)</h3>
+    <div class="board" id="board">
+      <div class="col" data-col="new"><div class="col-head">Поступили <span data-count></span></div></div>
+      <div class="col" data-col="ok"><div class="col-head">Допущены <span data-count></span></div></div>
+      <div class="col" data-col="no"><div class="col-head">Отклонены <span data-count></span></div></div>
+    </div>
+    <p class="muted" style="margin-top:12px">Перетащите заявку мышью или пальцем в нужную колонку.</p>
+  </section>
+
+  <!-- 4. Свайп-карусель + длинная задача -->
+  <section class="panel panel-amber span-4">
+    <h3 class="h3">Лоты закупки (свайп)</h3>
+    <div class="swipe" id="swipe"><div class="swipe-track" id="track"></div></div>
+    <div class="dots" id="dots"></div>
+    <h3 class="h3" style="margin-top:24px">Искусственная длинная задача</h3>
+    <div class="btns"><button class="btn btn-danger" id="btnLong">Сформировать отчёт (~300 мс)</button><div class="spinner" aria-hidden="true"></div></div>
+    <p class="lt-out" id="ltOut" style="margin-top:12px">Не запускалась</p>
+  </section>
+
+  <!-- 5. Скроллируемая область -->
+  <section class="panel span-12">
+    <h3 class="h3">Реестр извещений (прокручиваемая область)</h3>
+    <div class="scroll" id="scroll">
+      <table class="reg"><thead><tr><th>№ извещения</th><th>Предмет закупки</th><th>Способ</th><th class="num">НМЦК, ₽</th><th>Окончание подачи</th></tr></thead><tbody id="regBody"></tbody></table>
+    </div>
+  </section>
+</main>
+
+<button class="btn btn-sm mfab" id="btnFab">Метрики</button>
+<aside class="mpanel" id="mpanel" aria-label="Панель метрик">
+  <div class="btns" style="justify-content:space-between"><b>Метрики UI (ЛР7)</b><button class="btn btn-sm btn-ghost" id="btnClose">Закрыть</button></div>
+  <div class="btns" style="margin-top:8px"><button class="btn btn-sm" id="btnRun">Прогнать тесты</button><button class="btn btn-sm btn-ghost" id="btnJson">Скачать JSON</button></div>
+  <div id="mout" class="muted" style="margin-top:8px">Нажмите «Прогнать тесты»: прокрутка, ввод, анимации, жесты, DOM/CSS-аудит (~15 с).</div>
+</aside>
+
+<script src="js/app.js" defer></script>
+</body>
+</html>

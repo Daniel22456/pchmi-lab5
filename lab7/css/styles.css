@@ -1,0 +1,124 @@
+/* ЛР7 · страница-полигон · ИС сопровождения государственных закупок
+   Саяхов Д. Р., ИВТ-ПО-302Б (СДР). Токены — как в прототипах ЛР4–ЛР5. */
+@font-face{font-family:'IBM Plex Sans';font-weight:400;font-display:swap;src:url(../fonts/ibm-plex-sans-cyrillic-400-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'IBM Plex Sans';font-weight:400;font-display:swap;src:url(../fonts/ibm-plex-sans-latin-400-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+20BD}
+@font-face{font-family:'IBM Plex Sans';font-weight:600;font-display:swap;src:url(../fonts/ibm-plex-sans-cyrillic-600-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'IBM Plex Sans';font-weight:600;font-display:swap;src:url(../fonts/ibm-plex-sans-latin-600-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F,U+20AC,U+20BD}
+@font-face{font-family:'Cormorant Garamond';font-weight:700;font-display:swap;src:url(../fonts/cormorant-garamond-cyrillic-700-normal.woff2) format('woff2');unicode-range:U+0301,U+0400-045F,U+0490-0491,U+04B0-04B1,U+2116}
+@font-face{font-family:'Cormorant Garamond';font-weight:700;font-display:swap;src:url(../fonts/cormorant-garamond-latin-700-normal.woff2) format('woff2');unicode-range:U+0000-00FF,U+2000-206F}
+
+:root{
+  --night:#142233; --steel:#4A6A88; --burgundy:#6B1E36; --amber:#B5832F; --bottle:#2E6A50; --brick:#B03A2E;
+  --overcast:#E8ECF0; --paper:#FBFCFD; --ink:#1B2633; --muted:#5E6B7A; --rule:#C9D1DA;
+  --u:24px;
+  --serif:'Cormorant Garamond',Georgia,serif; --sans:'IBM Plex Sans','Helvetica Neue',Arial,sans-serif;
+  /* токены длительности анимаций */
+  --dur-fast:150ms; --dur-base:250ms; --dur-slow:400ms;
+  --ease:cubic-bezier(.2,.7,.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box}
+html{touch-action:manipulation;-webkit-text-size-adjust:100%}
+body{font-family:var(--sans);font-size:16px;line-height:24px;background:var(--overcast);color:var(--ink)}
+button{font:inherit;touch-action:manipulation}
+img{max-width:100%;height:auto;display:block}
+
+/* шапка */
+.hdr{background:var(--night);color:#fff;box-shadow:inset 0 -3px 0 var(--burgundy)}
+.hdr-in{max-width:1200px;margin:0 auto;padding:var(--u) 16px;display:flex;align-items:center;gap:24px}
+.mark{width:48px;height:48px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4);display:grid;place-items:center;font:700 22px/1 var(--serif)}
+.brand-name{font:700 22px/24px var(--serif)}
+.brand-sub{font-size:13px;opacity:.75}
+.hdr-sp{flex:1}
+
+.wrap{max-width:1200px;margin:0 auto;padding:var(--u) 16px;display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:var(--u)}
+.span-12{grid-column:span 12}.span-8{grid-column:span 8}.span-4{grid-column:span 4}.span-6{grid-column:span 6}
+@media (max-width:900px){.span-8,.span-4,.span-6{grid-column:span 12}}
+
+.panel{background:var(--paper);box-shadow:inset 0 4px 0 var(--night);padding:var(--u)}
+.panel-steel{box-shadow:inset 0 4px 0 var(--steel)}
+.panel-amber{box-shadow:inset 0 4px 0 var(--amber)}
+.h1{font:700 36px/48px var(--serif);color:var(--night)}
+.h2{font:700 28px/48px var(--serif);color:var(--night)}
+.h3{font:700 22px/24px var(--serif);color:var(--night);margin-bottom:var(--u)}
+.lead{font-size:18px;line-height:24px;color:var(--muted);margin-bottom:var(--u);max-width:70ch}
+.txt{margin-bottom:var(--u);max-width:75ch}
+.hero{margin-top:var(--u);aspect-ratio:1200/440;background:var(--night)}
+.muted{color:var(--muted);font-size:14px}
+
+/* кнопки */
+.btn{display:inline-flex;align-items:center;gap:8px;height:48px;background:var(--night);color:#fff;border:0;border-radius:2px;font-weight:600;font-size:15px;padding:0 22px;cursor:pointer;transition:background-color var(--dur-fast) var(--ease)}
+.btn:hover{background:var(--steel)}
+.btn-ghost{background:transparent;color:var(--night);box-shadow:inset 0 0 0 1px var(--night)}
+.btn-ghost:hover{background:var(--night);color:#fff}
+.btn-danger{background:var(--burgundy)}
+.btn-danger:hover{background:var(--brick)}
+.btn-sm{height:36px;padding:0 14px;font-size:13px}
+.btns{display:flex;flex-wrap:wrap;gap:12px;align-items:center}
+
+/* анимированные карточки закупок */
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:var(--u)}
+@media (max-width:900px){.cards{grid-template-columns:1fr}}
+.card{background:#fff;box-shadow:inset 0 0 0 1px var(--rule);padding:var(--u);display:flex;flex-direction:column;gap:8px;
+  animation:card-in var(--dur-slow) var(--ease) both;transition:transform var(--dur-fast) var(--ease),box-shadow var(--dur-fast) var(--ease)}
+.card:hover{transform:translateY(-4px);box-shadow:inset 0 0 0 1px var(--steel),0 8px 24px rgba(20,34,51,.12)}
+.card-num{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card-title{font-weight:600;line-height:24px}
+.card-sum{font:700 22px/24px var(--serif);color:var(--night)}
+.card-more{max-height:0;overflow:hidden;opacity:0;transition:max-height var(--dur-base) var(--ease),opacity var(--dur-base) var(--ease);font-size:14px;color:var(--muted)}
+.card-open .card-more{max-height:96px;opacity:1}
+.card-fav{align-self:flex-start}
+.card-fav-on{background:var(--amber);color:#fff;box-shadow:none}
+@keyframes card-in{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
+
+.badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;line-height:24px;padding:0 8px;background:var(--overcast);color:var(--night);align-self:flex-start}
+.badge-live{background:#E3F0E9;color:var(--bottle)}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--bottle);animation:pulse 1200ms ease-in-out infinite}
+@keyframes pulse{50%{opacity:.25}}
+
+/* подсказки (hover) */
+.tip{position:relative;cursor:help;border-bottom:1px dashed var(--steel)}
+.tip-box{position:absolute;left:0;bottom:calc(100% + 8px);width:240px;background:var(--night);color:#fff;font-size:13px;line-height:20px;padding:8px 12px;opacity:0;visibility:hidden;transform:translateY(4px);transition:opacity var(--dur-fast),transform var(--dur-fast),visibility var(--dur-fast);z-index:5}
+.tip:hover .tip-box,.tip:focus .tip-box{opacity:1;visibility:visible;transform:none}
+
+/* drag-зона (канбан рассмотрения заявок) */
+.board{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.col{background:var(--overcast);min-height:216px;padding:12px;display:flex;flex-direction:column;gap:8px;transition:box-shadow var(--dur-fast)}
+.col-over{box-shadow:inset 0 0 0 2px var(--amber)}
+.col-head{font-size:13px;font-weight:600;color:var(--night);display:flex;justify-content:space-between}
+@media (max-width:600px){.board{grid-template-columns:1fr}.col{min-height:96px}.txt{position:relative}.tip{position:static}.tip-box{width:auto;right:0}}
+.chip{background:#fff;box-shadow:inset 0 0 0 1px var(--rule);padding:8px 12px;font-size:14px;cursor:grab;touch-action:none;user-select:none}
+.chip-drag{opacity:.85;box-shadow:0 8px 24px rgba(20,34,51,.2);cursor:grabbing;position:relative;z-index:10}
+
+/* свайп-карусель лотов */
+.swipe{overflow:hidden;touch-action:pan-y;background:var(--night);color:#fff;user-select:none}
+.swipe-track{display:flex;transition:transform var(--dur-base) var(--ease)}
+.slide{flex:0 0 100%;padding:var(--u);min-height:144px}
+.slide b{font:700 28px/48px var(--serif);display:block}
+.dots{display:flex;gap:8px;margin-top:12px}
+.dots i{width:24px;height:4px;background:var(--rule);transition:background-color var(--dur-fast)}
+.dots .on{background:var(--burgundy)}
+
+/* скроллируемая область — реестр */
+.scroll{height:384px;overflow:auto;box-shadow:inset 0 0 0 1px var(--rule);background:#fff;overscroll-behavior:contain}
+.reg{width:100%;border-collapse:collapse;font-size:14px}
+.reg th{position:sticky;top:0;background:var(--night);color:#fff;text-align:left;font-weight:600;padding:12px;line-height:24px}
+.reg td{padding:12px;border-bottom:1px solid var(--overcast);line-height:24px}
+.reg tr:hover td{background:#F2F5F8}
+.num{font-variant-numeric:tabular-nums;text-align:right}
+
+/* длинная задача */
+.lt-out{font-variant-numeric:tabular-nums;font-size:14px}
+.spinner{width:24px;height:24px;border:3px solid var(--rule);border-top-color:var(--burgundy);border-radius:50%;animation:spin 800ms linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* панель метрик */
+.mpanel{position:fixed;right:16px;bottom:16px;width:400px;max-height:calc(100vh - 32px);overflow:auto;background:var(--paper);box-shadow:0 12px 40px rgba(20,34,51,.25),inset 0 4px 0 var(--burgundy);padding:16px;z-index:100;font-size:13px;line-height:20px;display:none}
+.mpanel-on{display:block}
+.mtab{width:100%;border-collapse:collapse;margin:8px 0}
+.mtab td{padding:4px 6px;border-bottom:1px solid var(--overcast);vertical-align:top}
+.mtab td:nth-child(2){font-variant-numeric:tabular-nums;white-space:nowrap}
+.st-good{color:var(--bottle);font-weight:600}
+.st-needs{color:var(--amber);font-weight:600}
+.st-poor{color:var(--brick);font-weight:600}
+.mfab{position:fixed;right:16px;bottom:16px;z-index:99}
+.mgroup{font-weight:600;color:var(--night);padding-top:8px}
